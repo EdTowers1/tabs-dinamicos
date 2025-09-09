@@ -32,7 +32,7 @@ function WebServer()
 
 	local oServer 	:= Httpd2()
 
-	oServer:SetPort( 85 )
+	oServer:SetPort( 86 )
 	oServer:SetDirFiles( 'examples', .T. )		//	.t. == Index list
 
 	//oServer:SetDirFiles( 'data.repository' )

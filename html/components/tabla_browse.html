@@ -13,13 +13,11 @@ local cID := pvalue(2)
 local aColumnas := pvalue(3)
 local aData := pvalue(4)
 local aEvents := pvalue(5)  // Ahora el 5º parámetro es aEvents
-local hOpciones := iif( valtype(pvalue(6)) == 'A', pvalue(6), {=>} ) 
+local tmp := pvalue(6)
 local aCol, i
+local hOpciones := iif( valtype(pvalue(6)) == 'A', pvalue(6), {=>} ) 
 
-// Opciones por defecto
-if !('height' $ hOpciones)
-    hOpciones['height'] := '500px'
-endif
+
 if !('index' $ hOpciones)
     hOpciones['index'] := 'ROW_ID'
 endif

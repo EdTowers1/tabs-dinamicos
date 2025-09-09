@@ -53,9 +53,9 @@
 			<!--<link href="https://unpkg.com/tabulator-tables@5.4.3/dist/css/tabulator.min.css" rel="stylesheet">-->
 			<!--<link href="https://unpkg.com/tabulator-tables@5.4.3/dist/css/tabulator_bootstrap5.min.css" rel="stylesheet">-->
 			<!--<link href="https://unpkg.com/tabulator-tables@5.4.3/dist/css/tabulator_midnight.min.css" rel="stylesheet">-->
-			<link href="https://unpkg.com/tabulator-tables@5.4.3/dist/css/tabulator_simple.min.css" rel="stylesheet">
+			<link href="https://unpkg.com/tabulator-tables@5.5.0/dist/css/tabulator_simple.min.css" rel="stylesheet">
 			
-			<script type="text/javascript" src="https://unpkg.com/tabulator-tables@5.4.3/dist/js/tabulator.min.js"></script>
+			<script type="text/javascript" src="https://unpkg.com/tabulator-tables@5.5.0/dist/js/tabulator.min.js"></script>
 			<script type="text/javascript" src="{{ hb_GetEnv( "ROOTRELATIVE") }}files/uhttpd2/moment/moment.js"></script> 
 		
 		<!-- -->

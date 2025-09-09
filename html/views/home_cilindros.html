@@ -1,7 +1,7 @@
 <?prg
 #include "./lib/tweb/tweb.ch"
 
-local o, oWeb, hCredentials
+local o, oDlg, hCredentials
 
 // data de pruebas
 LOCAL aData := { ;
@@ -26,7 +26,17 @@ LOCAL aData := { ;
 	{ 'ROW_ID' => 19, 'CODCLI' => 'CLI019', 'NOMCLI' => 'Galería de Arte Moderno',      'CIUDAD' => 'Popayán',     'TELEFONO' => '604-2143658', 'DIRECCION' => 'Calle del Museo #3-2',   'TIPO' => 'Cultural',   'ESTADO' => 'Activo' }, ;
 	{ 'ROW_ID' => 20, 'CODCLI' => 'CLI020', 'NOMCLI' => 'Consultoría TechPro',         'CIUDAD' => 'Yopal',       'TELEFONO' => '601-9846123', 'DIRECCION' => 'Av. Principal #50-10',   'TIPO' => 'Servicios',  'ESTADO' => 'Inactivo' }, ;
 	{ 'ROW_ID' => 21, 'CODCLI' => 'CLI021', 'NOMCLI' => 'Distribuciones Norte',         'CIUDAD' => 'Montería',    'TELEFONO' => '605-8796421', 'DIRECCION' => 'Zona Industrial #7-5',   'TIPO' => 'Logística',  'ESTADO' => 'Activo' }, ;
-	{ 'ROW_ID' => 22, 'CODCLI' => 'CLI022', 'NOMCLI' => 'Academia de Música Harmonia',  'CIUDAD' => 'Florencia',   'TELEFONO' => '608-3219876', 'DIRECCION' => 'Cra 4 #6-8',            'TIPO' => 'Educación',  'ESTADO' => 'Activo' }  ;
+	{ 'ROW_ID' => 22, 'CODCLI' => 'CLI022', 'NOMCLI' => 'Academia de Música Harmonia',  'CIUDAD' => 'Florencia',   'TELEFONO' => '608-3219876', 'DIRECCION' => 'Cra 4 #6-8',            'TIPO' => 'Educación',  'ESTADO' => 'Activo' }, ;
+	{ 'ROW_ID' => 23, 'CODCLI' => 'CLI023', 'NOMCLI' => 'Técnicos Rápidos S.A.',        'CIUDAD' => 'Rionegro',    'TELEFONO' => '604-3217890', 'DIRECCION' => 'Parque Industrial #3-12', 'TIPO' => 'Servicios',  'ESTADO' => 'Activo' }, ;
+	{ 'ROW_ID' => 24, 'CODCLI' => 'CLI024', 'NOMCLI' => 'Floristería La Orquídea',      'CIUDAD' => 'Villavicencio','TELEFONO' => '601-5553344', 'DIRECCION' => 'Calle 2 #5-10',         'TIPO' => 'Comercio',   'ESTADO' => 'Activo' }, ;
+	{ 'ROW_ID' => 25, 'CODCLI' => 'CLI025', 'NOMCLI' => 'Software Andes',              'CIUDAD' => 'Popayán',     'TELEFONO' => '604-3332211', 'DIRECCION' => 'Av. Tecnología #7-45',   'TIPO' => 'Tecnología', 'ESTADO' => 'Activo' }, ;
+	{ 'ROW_ID' => 26, 'CODCLI' => 'CLI026', 'NOMCLI' => 'Panadería Doña Luisa',         'CIUDAD' => 'Sincelejo',   'TELEFONO' => '605-1122334', 'DIRECCION' => 'Calle 11 #4-6',         'TIPO' => 'Alimentos',  'ESTADO' => 'Activo' }, ;
+	{ 'ROW_ID' => 27, 'CODCLI' => 'CLI027', 'NOMCLI' => 'Minerales del Valle',          'CIUDAD' => 'Quibdó',      'TELEFONO' => '606-7788990', 'DIRECCION' => 'Zona Rural Km 10',      'TIPO' => 'Minería',    'ESTADO' => 'Inactivo' }, ;
+	{ 'ROW_ID' => 28, 'CODCLI' => 'CLI028', 'NOMCLI' => 'Agencia de Viajes Mundo',      'CIUDAD' => 'Pereira',     'TELEFONO' => '606-4455667', 'DIRECCION' => 'Cra 10 #20-30',         'TIPO' => 'Turismo',    'ESTADO' => 'Activo' }, ;
+	{ 'ROW_ID' => 29, 'CODCLI' => 'CLI029', 'NOMCLI' => 'Imprenta Central',             'CIUDAD' => 'Bucaramanga', 'TELEFONO' => '607-9988776', 'DIRECCION' => 'Carrera 14 #8-20',      'TIPO' => 'Servicios',  'ESTADO' => 'Activo' }, ;
+	{ 'ROW_ID' => 30, 'CODCLI' => 'CLI030', 'NOMCLI' => 'Lavandería El Fresco',         'CIUDAD' => 'Cali',        'TELEFONO' => '602-6677889', 'DIRECCION' => 'Calle 22 #11-9',        'TIPO' => 'Servicios',  'ESTADO' => 'Activo' }, ;
+	{ 'ROW_ID' => 31, 'CODCLI' => 'CLI031', 'NOMCLI' => 'Academia Futuro',              'CIUDAD' => 'Tunja',       'TELEFONO' => '608-5566778', 'DIRECCION' => 'Av. Educativa #2-18',   'TIPO' => 'Educación',  'ESTADO' => 'Inactivo' }, ;
+	{ 'ROW_ID' => 32, 'CODCLI' => 'CLI032', 'NOMCLI' => 'Electrónica Soluciones',       'CIUDAD' => 'Valledupar',  'TELEFONO' => '605-2233445', 'DIRECCION' => 'Zona Comercial #9-4',    'TIPO' => 'Electrónica','ESTADO' => 'Activo' }  ;
 	}
 
 
@@ -42,13 +52,7 @@ local aColumnas := { ;
 	}
 
 // Opciones para el browse
-local aOptions := { ;
-	'index'  => 'ROW_ID', ;
-	'selectable' => .T., ;
-	'selectableRollingSelection' => .T., ;
-	'selectableRangeMode' => "click", ;
-	'movableColumns' => .F. ;
-	}
+
 
 local aBotones := { ;
 	{ 'id' => 'btn_add', 'label' => 'Adicionar', 'icon' => '<i class="fas fa-plus"></i>', 'link' => 'nuevocilindro' }, ;
@@ -63,7 +67,7 @@ local aBotones := { ;
 
 local aEvents := { ;
 	{ 'name' => 'rowClick' , 'proc' => 'prueba' } ;
-}
+	}
 
 // Autenticación
 if ! Authorization()
@@ -77,54 +81,120 @@ DEFINE WEB oWeb TITLE 'Home - Cilindros'
 
 DEFINE FORM o ID 'form_home_cilindros'  API 'api_folder'  ON INIT 'prueba' OF oWeb
 o:lFluid := .t.
-
-
-		HTML o  
-
-			<style>
-			
-				#mycontainer {
-					border:2px solid green;					
-					width:100%					
-				}
-				
-				#mycontainer-2 {
-					border:2px solid red;					
-					width:100%					
-				}				
-			</style>
-
-		ENDTEXT	
+// 	
 
 INIT FORM o 
 
+HTML o 
+  <style>
+    /* Reglas globales y de estructura */
+		.left-pane {
+			display: flex;
+			flex-direction: column;
+			height: 100%;
+			min-height: 0;
+			background-color: #f8f9fa;
+			/* padding: 0;  Eliminar padding para que la tabla ocupe todo el alto */
+		}
+    .right-pane {
+      display: flex;
+      overflow: hidden;
+     
+    }
+    .right-pane img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    
+    /* Componentes específicos */
+		.tabulator {
+			font-size: 12px;
+			flex-grow: 1;
+			min-height: 0;
+		}
+    /* Media Queries para dispositivos móviles */
+		@media (max-width: 575.98px) {
+			.row.h-100 {
+				flex-direction: column;
+			}
+			.left-pane {
+				height: 40%;
+				min-height: 0;
+				overflow-y: auto;
+			}
+			.right-pane {
+				height: 60%;
+			}
+			#navbarButtons .d-flex {
+				justify-content: center;
+				width: 100%;
+			}
+		}
+  </style>
+
+ENDTEXT
+
 // Configuración de botones para la barra de herramientas
 
-	DIV o STYLE 'box-shadow: 5px 2px 8px rgba(0,0,0,0.35); padding: 10px; border-radius: 8px;'
+// DIV o STYLE 'box-shadow: 2px 2px 5px rgba(0,0,0,0.35); padding: 5px; border-radius: 8px;'
 
-		ROWGROUP 	o
-			COL o GRID 4
-			
+// ROW o
+		
+// 	COL o GRID 4
+
+// 		// BUTTON ID 'btn_add'  ICON '<div style="display:flex;flex-direction:column;align-items:center;"><i class="fas fa-plus text-primary" style="font-size:16px;"></i><span style="font-size:9px;color:#6c757d;margin-top:2px;">Adicionar</span></div>' LINK 'nuevocilindro' GRID 0 CLASS 'border-0' STYLE 'margin-right:5px;border:0;background:transparent;padding:2px 4px;height:40px;' OF o
+// 		// BUTTON ID 'btn_edit'   ICON '<div style="display:flex;flex-direction:column;align-items:center;"><i class="fas fa-edit text-primary" style="font-size:16px;"></i><span style="font-size:9px;color:#6c757d;margin-top:2px;">Editar</span></div>' ACTION 'editar_cliente' GRID 0 CLASS 'border-0' STYLE 'margin-right:5px;border:0;background:transparent;padding:2px 4px;height:40px;' OF o
+// 		// BUTTON ID 'btn_delete'   ICON '<div style="display:flex;flex-direction:column;align-items:center;"><i class="fas fa-trash text-primary" style="font-size:16px;"></i><span style="font-size:9px;color:#6c757d;margin-top:2px;">Borrar</span></div>' ACTION 'eliminar_cliente' GRID 0 CLASS 'border-0' STYLE 'margin-right:5px;border:0;background:transparent;padding:2px 4px;height:40px;' OF o
+// 		// BUTTON ID 'btn_view'   ICON '<div style="display:flex;flex-direction:column;align-items:center;"><i class="fas fa-eye text-primary" style="font-size:16px;"></i><span style="font-size:9px;color:#6c757d;margin-top:2px;">Ver</span></div>' ACTION 'ver_cliente' GRID 0 CLASS 'border-0' STYLE 'margin-right:5px;border:0;background:transparent;padding:2px 4px;height:40px;' OF o
+
+// 		// ROWGROUP o STYLE 'margin-bottom:2px;'
+// 		// 	GET ID 'cFiltro' VALUE '' ;
+// 		// 	PLACEHOLDER	 'Ingrese el nombre o código del cliente...' ;
+// 		// 	BUTTON '<i class="fas fa-search"></i>' ;
+// 		// 	ACTION 'filtrar_clientes' ;
+// 		// 	GRID 12 OF o
+// 		// ENDROW o
+
+// 		// Usar el componente de tabla
+// 		HTML o FILE 'components/tabla_browse.html' PARAMS o, 'clientes', aColumnas, aData, aEvents
+
+// 		// Incluir componente para la barra de paginación
+// 		HTML o FILE 'components/barra_paginacion.html' PARAMS o, 'nav', 0
+// 	ENDCOL o
+
+// 	COL o GRID 8
+
+// 		// DIV o ID 'mycontainer'		
+// 		// ENDDIV o
+
+// 	ENDCOL o
+// ENDROW o
+
+// ENDDIV o
+
+
+DIV o CLASS 'row h-100'
+
+	DIV o CLASS 'col-12 col-md-4 left-pane' STYLE 'height:100%;min-height:0;display:flex;flex-direction:column;'
+
+		DIV o ID 'example-table'
 			// Usar el componente de tabla
-				HTML o FILE 'components/tabla_browse.html' PARAMS o, 'clientes', aColumnas, aData, aEvents, aOptions
-				//HTML o FILE 'components/barra_paginacion.html' PARAMS o, 'nav', 0
-
-			ENDCOL o
-
-			COL o GRID 8
-				// Incluir un contenedor para el mapa
-				//HTML o INLINE 'id="mapa" style="width:100%;height:400px;border:1px solid #ccc;border-radius:8px;"<br><div id="mapa"></div>'
-				//HTML o INLINE 'id="mycontainer" style="width:100%;height:400px;border:1px solid #ccc;border-radius:8px;"<br><div id="mycontainer"></div>'
-
-			// HTML o INLINE 'id="mycontainer"<br><div id="mycontainer"></div>'
-			DIV o ID 'mycontainer'
-			
-			ENDDIV o
-
-		ENDCOL o
-	ENDROW o
-
+			HTML o FILE 'components/tabla_browse.html' PARAMS o, 'clientes', aColumnas, aData, aEvents
+		ENDDIV o
+	
 	ENDDIV o
+
+	DIV o CLASS 'col-12 col-md-8 p-2 right-pane'
+		HTML o
+				<div class="text-center mt-4"><h1>Bienvenido al sistema de gestión de cilindros</h1></div>
+			ENDTEXT
+	ENDDIV o
+
+
+
+ENDDIV o
+
 
 ENDFORM o
 

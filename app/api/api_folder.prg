@@ -14,7 +14,7 @@ return oDom:Send()
 
 function DoPrueba( oDom )
 
-	    local cHtml := ULoadHtml( '../html/ayudas/ayuda_cliente.html'  )
+	    local cHtml := ULoadHtml( '../html/views/prueba.html'  )
 
 	    // Asignar el HTML al contenedor especificado
 	    oDom:SetPanel( 'form_home_cilindros-mycontainer', cHtml )

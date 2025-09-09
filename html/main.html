@@ -93,7 +93,7 @@ DEFINE WEB oWeb TITLE 'Sistema de Gestión de Cilindros'
 									pane.className = 'tab-pane fade'; pane.id = paneId; pane.setAttribute('role', 'tabpanel'); pane.setAttribute('aria-labelledby', btnTab.id);
 
 									// Crear el iframe con estilo mejorado para ocupar todo el espacio disponible
-									pane.innerHTML = '<iframe src="' + url + '" style="width:100%;height:100%;border:0;"></iframe>';
+									pane.innerHTML = '<iframe src="' + url + '" style="width:100%;height:100%;border:solid 2px ;"></iframe>';
 									tabContent.appendChild(pane);
 									if (makeActive) activarTab(btnTab);
 								}

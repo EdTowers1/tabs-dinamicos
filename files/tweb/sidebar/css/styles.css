@@ -9,6 +9,35 @@
   box-shadow: 2px 0 12px rgba(0, 0, 0, 0.1);
 }
 
+/* Herencia de altura para layout de tabla responsive */
+html,
+body {
+  height: 100%;
+  min-height: 0;
+}
+.row.h-100 {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+}
+.left-pane {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Contenedor específico de la tabla browse/tabulator */
+#form_home_cilindros-clientes {
+  min-height: 0;
+  max-height: calc(100vh - 100px); /* Ajusta 100px según header/navbar */
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
 .sidebar.right {
   top: 59px;
   right: 0;
@@ -206,7 +235,7 @@ nav.navbar .navbar-toggler-icon {
 }
 
 /* Estilos para el sistema de pestañas */
-.main-content {
+/* .main-content {
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -218,65 +247,23 @@ nav.navbar .navbar-toggler-icon {
 }
 .tab-close:hover {
   color: #a71d2a;
-}
-
+} */
 
 /* Estilos para el sistema de pestañas - ajustados para altura correcta */
-html, body {
-  height: 100%;
-
-}
-
-body > form {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-.folder-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.content-area {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
 
 .main-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
   padding: 0.5rem;
   overflow: hidden;
 }
 
-#tabsSystem {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
+.tab-close {
+  color: #dc3545;
 }
-
-.tab-content {
-  flex: 1;
-  position: relative;
+.tab-close:hover {
+  color: #a71d2a;
 }
 
 .tab-pane {
   height: 100%;
   width: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-.tab-pane iframe {
-  flex: 1;
-  width: 100%;
-  height: 100%;
-  border: 0;
-  min-height: unset; /* Eliminar min-height fijo */
 }

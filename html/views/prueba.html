@@ -1,29 +1,34 @@
 <?prg
 #include "./lib/tweb/tweb.ch"
 
-local o, oWeb, hCredentials
+LOCAL o, oDlg, hCredentials
 
 //	Auth system...
 
-if ! Authorization()
-	return nil
-endif
+IF ! Authorization()
+	RETURN NIL
+ENDIF
 
 //	-------------------------
 
 hCredentials := USession( 'credentials' )
 
-DEFINE WEB oWeb
+DEFINE DIALOG oDlg
 
-DEFINE FORM o ID 'myform' API 'api_main' OF oWeb
+	DEFINE FORM o ID 'dlg_prueba' API 'api_main' OF oDlg
+	o:lDessign 	:= .T.
 
-INIT FORM o
+	INIT FORM o
 
-HTML o 
-<div class="text-center mt-4"><h1>Bienvenido al sistema de gestión de cilindros</h1></div>
-ENDTEXT
+		DIV o STYLE 'box-shadow: 5px 2px 8px rgba(0,0,0,0.35); padding: 10px; border-radius: 8px;'
 
-ENDFORM o
+			HTML o
+				<div class="text-center mt-4"><h1>Bienvenido al sistema de gestión de cilindros</h1></div>
+			ENDTEXT
+		
+		ENDDIV o
 
-INIT WEB oWeb RETURN
+	ENDFORM o
+
+INIT DIALOG oDlg RETURN
 ?>
