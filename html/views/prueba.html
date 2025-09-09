@@ -1,0 +1,29 @@
+<?prg
+#include "./lib/tweb/tweb.ch"
+
+local o, oWeb, hCredentials
+
+//	Auth system...
+
+if ! Authorization()
+	return nil
+endif
+
+//	-------------------------
+
+hCredentials := USession( 'credentials' )
+
+DEFINE WEB oWeb
+
+DEFINE FORM o ID 'myform' API 'api_main' OF oWeb
+
+INIT FORM o
+
+HTML o 
+<div class="text-center mt-4"><h1>Bienvenido al sistema de gestión de cilindros</h1></div>
+ENDTEXT
+
+ENDFORM o
+
+INIT WEB oWeb RETURN
+?>

@@ -1,0 +1,190 @@
+<?prg
+#include "lib/tweb/tweb.ch" 
+
+LOCAL o, oWeb, hCredentials, oFolder
+
+//	Auth system...
+if ! Authorization()
+    return nil
+endif
+
+//	-------------------------
+hCredentials := USession( 'credentials' )
+
+DEFINE WEB oWeb TITLE 'Sistema de Gestión de Cilindros'
+
+    // Incluir la barra lateral
+    HTML oWeb FILE 'components/sidebar.html' PARAMS oWeb, 'Inicio', hCredentials
+
+    DEFINE FORM o ID 'myform' API 'api_folder' OF oWeb
+        o:lFluid := .t.
+    
+    INIT FORM o
+
+        // Contenedor principal para el sistema de pestañas
+        DIV o ID 'tabsContainer' CLASS 'folder-content' STYLE 'flex:1;display:flex;flex-direction:column;height:calc(100vh - 60px);'
+            DIV o CLASS 'content-area' STYLE 'flex:1;display:flex;flex-direction:column;'
+                DIV o CLASS 'main-content' STYLE 'flex:1;display:flex;flex-direction:column;'
+                    // Definimos un DIV contenedor para las pestañas dinámicas
+                    DIV o ID 'tabsSystem' STYLE 'display:flex;flex-direction:column;height:100%;'
+                        // Estructura de pestañas que será manipulada por JavaScript
+                        HTML o INLINE '<ul class="nav nav-tabs" id="tabList" role="tablist"></ul>'	
+                        HTML o INLINE '<div class="tab-content" id="tabContent" style="flex:1;height:calc(100% - 42px);"></div>'
+                    ENDDIV o
+                ENDDIV o
+            ENDDIV o
+        ENDDIV o
+
+        // JavaScript para la funcionalidad de pestañas dinámicas
+        HTML o
+
+            <script>
+							// Sistema de pestañas dinámicas
+							document.addEventListener('DOMContentLoaded', function () {
+								var tabCounter = 0;
+								var defaultBg = '#f8f9fa';
+								var colors = ['#e3f2fd', '#fce4ec', '#e8f5e9', '#fff3e0', '#f3e5f5', '#e0f7fa', '#f9fbe7'];
+
+								var tabList = document.getElementById('tabList');
+								var tabContent = document.getElementById('tabContent');
+
+								console.log('Elementos detectados:', {
+									tabList: tabList,
+									tabContent: tabContent
+								});
+
+								function activarTab(btn) {
+									if (!btn) return;
+									tabList.querySelectorAll('.nav-link').forEach(function (b) { b.classList.remove('active'); b.setAttribute('aria-selected', 'false'); });
+									tabContent.querySelectorAll('.tab-pane').forEach(function (p) { p.classList.remove('show', 'active'); });
+									btn.classList.add('active'); btn.setAttribute('aria-selected', 'true');
+									var paneId = btn.getAttribute('data-target');
+									var pane = document.getElementById(paneId);
+									if (pane) pane.classList.add('show', 'active');
+									var color = btn.getAttribute('data-color');
+									tabContent.style.backgroundColor = color || defaultBg;
+								}
+
+								// Crear una pestaña con iframe
+								window.addIframeTab = function (url, customId, title, makeActive) {
+									console.log("Intentando crear iframe tab con URL:", url);
+									tabCounter++; var idx = tabCounter;
+									var tabId = customId || ('tab-ifr-' + idx);
+									// Asignar color a la pestaña usando el array colors (ciclo)
+									var color = colors[(idx - 1) % colors.length] || defaultBg;
+									var paneId = tabId + '-pane';
+									var li = document.createElement('li'); li.className = 'nav-item'; li.setAttribute('role', 'presentation');
+									var btnTab = document.createElement('button');
+									btnTab.className = 'nav-link'; btnTab.type = 'button'; btnTab.id = tabId + '-btn';
+									btnTab.setAttribute('role', 'tab'); btnTab.setAttribute('aria-controls', paneId);
+									btnTab.setAttribute('aria-selected', 'false'); btnTab.setAttribute('data-target', paneId);
+									// Guardar el color en un atributo y aplicarlo visualmente (pequeña franja)
+									btnTab.setAttribute('data-color', color);
+									btnTab.style.backgroundColor = color;
+									btnTab.style.borderLeft = '4px solid ' + color;
+									btnTab.innerHTML = '<span>' + (title || 'Tab') + '</span><span class="tab-close" title="Cerrar">&times;</span>';
+
+									btnTab.addEventListener('click', function (e) { if (e.target.classList.contains('tab-close')) return; activarTab(btnTab); });
+									btnTab.querySelector('.tab-close').addEventListener('click', function (e) { e.stopPropagation(); if (confirm('¿Deseas cerrar "' + (title || tabId) + '"?')) { li.remove(); var paneToRemove = document.getElementById(paneId); if (paneToRemove) paneToRemove.remove(); var first = tabList.querySelector('.nav-link'); if (first) activarTab(first); else tabContent.style.backgroundColor = defaultBg; } });
+
+									li.appendChild(btnTab); tabList.appendChild(li);
+
+									var pane = document.createElement('div');
+									pane.className = 'tab-pane fade'; pane.id = paneId; pane.setAttribute('role', 'tabpanel'); pane.setAttribute('aria-labelledby', btnTab.id);
+
+									// Crear el iframe con estilo mejorado para ocupar todo el espacio disponible
+									pane.innerHTML = '<iframe src="' + url + '" style="width:100%;height:100%;border:0;"></iframe>';
+									tabContent.appendChild(pane);
+									if (makeActive) activarTab(btnTab);
+								}
+
+								// Crear una pestaña con contenido HTML personalizado
+								window.addCustomTab = function (html, title, makeActive) {
+									tabCounter++; var idx = tabCounter;
+									var tabId = 'tab-custom-' + idx;
+									var paneId = tabId + '-pane';
+									// Asignar color a la pestaña usando el array colors (ciclo)
+									var color = colors[(idx - 1) % colors.length] || defaultBg;
+									var li = document.createElement('li'); li.className = 'nav-item'; li.setAttribute('role', 'presentation');
+									var btnTab = document.createElement('button');
+									btnTab.className = 'nav-link'; btnTab.type = 'button'; btnTab.id = tabId + '-btn';
+									btnTab.setAttribute('role', 'tab'); btnTab.setAttribute('aria-controls', paneId);
+									btnTab.setAttribute('aria-selected', 'false'); btnTab.setAttribute('data-target', paneId);
+									// Guardar el color y aplicarlo visualmente
+									btnTab.setAttribute('data-color', color);
+									btnTab.style.backgroundColor = color;
+									btnTab.style.borderLeft = '4px solid ' + color;
+									btnTab.innerHTML = '<span>' + (title || 'Tab ' + idx) + '</span><span class="tab-close" title="Cerrar">&times;</span>';
+
+									btnTab.addEventListener('click', function (e) { if (e.target.classList.contains('tab-close')) return; activarTab(btnTab); });
+									btnTab.querySelector('.tab-close').addEventListener('click', function (e) { e.stopPropagation(); if (confirm('¿Deseas cerrar "' + (title || tabId) + '"?')) { li.remove(); var paneToRemove = document.getElementById(paneId); if (paneToRemove) paneToRemove.remove(); var first = tabList.querySelector('.nav-link'); if (first) activarTab(first); else tabContent.style.backgroundColor = defaultBg; } });
+
+									li.appendChild(btnTab); tabList.appendChild(li);
+
+									var pane = document.createElement('div');
+									pane.className = 'tab-pane fade'; pane.id = paneId; pane.setAttribute('role', 'tabpanel'); pane.setAttribute('aria-labelledby', btnTab.id);
+									pane.innerHTML = html;
+									tabContent.appendChild(pane);
+
+									if (makeActive) activarTab(btnTab);
+								}
+
+								// Event listeners para los botones
+								tabContent.addEventListener('click', function (e) {
+									if (e.target.classList.contains('btn-success')) {
+										var group = e.target.closest('.input-group');
+										var input = group ? group.querySelector('input') : null;
+										var pane = e.target.closest('.tab-pane');
+										var tabIndex = pane ? pane.id.replace('pane-', '') : '?';
+										var value = input ? input.value : '';
+										alert('Valor en Tab ' + tabIndex + ': ' + value);
+									}
+								});
+
+								// Función para abrir módulos desde el sidebar
+								window.openTabFromSidebar = function (modulo, titulo) {
+									console.log("Abriendo tab desde sidebar:", modulo, titulo);
+
+									// Verificar si ya existe una pestaña con este ID
+									var tabId = modulo + '-tab';
+									var existingTab = document.getElementById(tabId + '-btn');
+
+									if (existingTab) {
+										// Si la pestaña ya existe, solo la activamos
+										console.log("La pestaña ya existe, activándola...");
+										activarTab(existingTab);
+										return;
+									}
+
+									// Si no existe, creamos una nueva pestaña con iframe
+									console.log("Creando nueva pestaña para", modulo);
+
+									// Usar directamente la ruta que el servidor expone
+									// Según app.prg: oServer:Route( 'recepcion', '../html/views/home_cilindros.html' )
+									var url = modulo; // Por ejemplo: 'recepcion'
+									console.log("URL del servidor:", url);
+
+									// Usar la función addIframeTab existente
+									addIframeTab(url, tabId, titulo, true);
+								}
+
+								// Aviso antes de salir si hay pestañas abiertas
+								window.addEventListener('beforeunload', function (e) {
+									if (tabList.querySelectorAll('.nav-link').length > 0) {
+										e.preventDefault();
+										e.returnValue = '';
+									}
+								});
+
+								// Función para abrir la vista de home_cilindros
+								window.abrirModulo = function (modulo, titulo) {
+									addIframeTab('views/' + modulo + '.html', modulo + '-tab', titulo, true);
+								}
+							});
+						</script>
+        ENDTEXT
+
+    ENDFORM o
+
+INIT WEB oWeb RETURN
+?>

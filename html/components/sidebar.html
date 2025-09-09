@@ -1,0 +1,51 @@
+<?prg 
+
+	local oNav
+	local oWeb
+	local hCredentials
+	local cTitulo
+	local cNombre
+
+	oWeb := pvalue(1)
+	hCredentials := pValue(3)    
+	
+	if valtype(pvalue(4)) == 'C' .and. !empty(pvalue(4))
+		cTitulo := '&nbsp;' + pvalue(4)
+	else
+		cTitulo := '&nbsp;Cilindros'  // Título por defecto
+	endif
+
+	//	Auth system...
+	if ! Authorization()
+		// Si no está autorizado, continuar y mostrar menú vacío
+		hCredentials := {=>}
+		hCredentials[ 'name' ] := ''
+		hCredentials[ 'user' ] := ''
+		hCredentials[ 'profile' ] := ''
+	endif
+	//	-------------------------	
+	
+	cNombre := ( hCredentials['name'])
+
+	// Inicio del navbar
+	NAV oNav ID 'nav' TITLE (cTitulo) LOGO 'files/images/ut_ico.png' ;
+		ROUTE '/'  WIDTH 30 HEIGHT 30 OF oWeb
+
+		// Elementos del navbar (renderizados como HTML para evitar problemas de parseo)
+		HTML NAVBAR OF oNav 
+			<ul class="navbar-nav">
+				<li class="nav-item"><a class="nav-link" style="cursor:pointer; color:inherit;" onclick="openTabFromSidebar('home','Inicio')"><i class="fa fa-home" aria-hidden="true" style="margin-right:6px;"></i>Inicio</a></li>
+				<li class="nav-item"><a class="nav-link" style="cursor:pointer; color:inherit;" onclick="openTabFromSidebar('recepcion','Cilindros')"><i class="fa fa-plus-circle" aria-hidden="true" style="margin-right:6px;"></i>Recepción</a></li>
+				<li class="nav-item"><a class="nav-link" style="cursor:pointer; color:inherit;" onclick="openTabFromSidebar('prueba','Ayuda')"><i class="fa fa-question-circle" aria-hidden="true" style="margin-right:6px;"></i>Ayuda</a></li>
+			</ul>
+
+
+			<div style="position: absolute;right: 10px;">
+				<a href="logout" onclick="return confirm('¿Desea cerrar sesión?');" style="color:white;text-decoration:none;" title="Cerrar sesión">
+					<i class="fa fa-power-off" aria-hidden="true" style="font-size:1.2em; color:rgb(255, 91, 91);"></i>
+				</a>
+			</div>
+		ENDTEXT
+
+	RETU ''
+?>

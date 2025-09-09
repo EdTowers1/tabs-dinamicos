@@ -1,0 +1,56 @@
+# Archivos ejecutables generados
+*.exe
+*.gbin
+*.bin
+
+# Directorios de compilación y temporales de Harbour/xHarbour
+**/.hbmk/
+**/.sessions/
+**/.tmp/
+**/.log/
+**/temp/
+**/tmp/
+
+# Archivos de log del servidor web
+*.log
+access.log
+error.log
+
+# Archivos de compilación
+*.obj
+*.o
+*.c
+*.ppo
+*.hrb
+
+# Archivos de backup y temporales
+*.bak
+*.tmp
+*~
+*.swp
+*.swo
+
+# Archivos de configuración sensibles
+connect.ini
+
+# Directorios de IDEs
+.vscode/
+.idea/
+
+# Archivos del sistema Windows
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Archivos temporales de macOS (si aplica)
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Dependencias descargadas (si aplica)
+node_modules/
+*.dll.backup
+
+# Archivos de sesión y cache
+session_*
+cache/

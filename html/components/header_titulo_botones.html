@@ -1,0 +1,62 @@
+<?prg
+// Componente de Header con Título y Botones
+// Parámetros: 
+//   - oFormulario: Objeto del formulario padre
+//   - cTitulo: Título a mostrar (opcional, por defecto 'Título')
+//   - cIcono: Icono a mostrar (opcional, por defecto 'fas fa-cog')
+//   - aBotones: Array con configuración de botones (opcional)
+//   - hOpciones: Hash con opciones adicionales (opcional)
+
+local oForm := pvalue(1)
+local cTitulo := iif( valtype(pvalue(2)) == 'C' .and. !empty(pvalue(2)), pvalue(2), 'Título' )
+local cIcono := iif( valtype(pvalue(3)) == 'C' .and. !empty(pvalue(3)), pvalue(3), 'fas fa-cog' )
+local aBotones := iif( valtype(pvalue(4)) == 'A', pvalue(4), {} )
+local hOpciones := iif( valtype(pvalue(5)) == 'H', pvalue(5), {=>} )
+local i, aBoton
+
+// Opciones por defecto
+if !('alertClass' $ hOpciones)
+	hOpciones['alertClass'] := 'alert-primary'
+endif
+if !('borderColor' $ hOpciones)
+	hOpciones['borderColor'] := '#0d6efd'
+endif
+
+// Botones por defecto si no se proporcionan
+if len(aBotones) == 0
+	aBotones := { ;
+		{ 'id' => 'btn_save_header', 'action' => 'guardar', 'class' => 'btn-primary', 'icon' => 'fas fa-save', 'label' => 'Guardar' }, ;
+		{ 'id' => 'btn_cancel_header', 'link' => '', 'class' => 'btn-secondary', 'icon' => 'fas fa-times', 'label' => 'Cancelar' } ;
+	}
+endif
+
+DIV oForm CLASS ('alert ' + hOpciones['alertClass'] + ' d-flex align-items-center justify-content-between') ;
+	STYLE ('padding: 4px 8px; line-height: 1.2; border: 1px solid ' + hOpciones['borderColor'] + '; border-radius: 4px;')
+	
+	// Sección izquierda
+	DIV oForm CLASS 'd-flex align-items-center' STYLE 'gap: 8px;'
+		HTML oForm INLINE ('<i class="' + cIcono + '"></i>')
+		HTML oForm INLINE ('<h5 style="margin: 0; font-size: 1rem;">' + cTitulo + '</h5>')
+	ENDDIV oForm
+
+	// Sección derecha (botones)
+	DIV oForm CLASS 'd-flex' STYLE 'gap: 6px;'
+		for i := 1 to len(aBotones)
+			aBoton := aBotones[i]
+			
+			if 'action' $ aBoton .and. !empty(aBoton['action'])
+				BUTTON ID (aBoton['id']) ACTION (aBoton['action']) CLASS ('btn btn-sm ' + aBoton['class']) GRID 0 ;
+					ICON ('<i class="' + aBoton['icon'] + '"></i>') ;
+					LABEL ('<span class="d-none d-sm-inline"> ' + aBoton['label'] + '</span>') OF oForm
+			elseif 'link' $ aBoton
+				BUTTON ID (aBoton['id']) LINK (aBoton['link']) CLASS ('btn btn-sm ' + aBoton['class']) GRID 0 ;
+					ICON ('<i class="' + aBoton['icon'] + '"></i>') ;
+					LABEL ('<span class="d-none d-sm-inline"> ' + aBoton['label'] + '</span>') OF oForm
+			endif
+		next
+	ENDDIV oForm
+
+ENDDIV oForm
+
+RETU ''
+?>

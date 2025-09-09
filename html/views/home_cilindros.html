@@ -1,0 +1,132 @@
+<?prg
+#include "./lib/tweb/tweb.ch"
+
+local o, oWeb, hCredentials
+
+// data de pruebas
+LOCAL aData := { ;
+	{ 'ROW_ID' => 1,  'CODCLI' => 'CLI001', 'NOMCLI' => 'Industrias ABC S.A.',           'CIUDAD' => 'Bogotá',       'TELEFONO' => '601-8547896', 'DIRECCION' => 'Calle 80 #45-23',      'TIPO' => 'Industrial', 'ESTADO' => 'Activo' }, ;
+	{ 'ROW_ID' => 2,  'CODCLI' => 'CLI002', 'NOMCLI' => 'Hospitales Unidos Ltda.',      'CIUDAD' => 'Medellín',    'TELEFONO' => '604-3216547', 'DIRECCION' => 'Av. El Poblado #32-15', 'TIPO' => 'Médico',     'ESTADO' => 'Activo' }, ;
+	{ 'ROW_ID' => 3,  'CODCLI' => 'CLI003', 'NOMCLI' => 'Restaurantes Gourmet',         'CIUDAD' => 'Cali',        'TELEFONO' => '602-5874123', 'DIRECCION' => 'Carrera 5 #12-45',      'TIPO' => 'Restaurante', 'ESTADO' => 'Inactivo' }, ;
+	{ 'ROW_ID' => 4,  'CODCLI' => 'CLI004', 'NOMCLI' => 'Laboratorios Químicos',        'CIUDAD' => 'Barranquilla','TELEFONO' => '605-9638520', 'DIRECCION' => 'Calle 72 #38-90',      'TIPO' => 'Laboratorio', 'ESTADO' => 'Activo' }, ;
+	{ 'ROW_ID' => 5,  'CODCLI' => 'CLI005', 'NOMCLI' => 'Constructora Edificar',        'CIUDAD' => 'Cartagena',   'TELEFONO' => '605-7894561', 'DIRECCION' => 'Av. San Martín #10-78', 'TIPO' => 'Construcción','ESTADO' => 'Activo' }, ;
+	{ 'ROW_ID' => 6,  'CODCLI' => 'CLI006', 'NOMCLI' => 'Clínica Santa María',          'CIUDAD' => 'Bucaramanga', 'TELEFONO' => '607-3214569', 'DIRECCION' => 'Carrera 27 #45-67',     'TIPO' => 'Médico',     'ESTADO' => 'Activo' }, ;
+	{ 'ROW_ID' => 7,  'CODCLI' => 'CLI007', 'NOMCLI' => 'Talleres Mecánicos del Sur',   'CIUDAD' => 'Pasto',       'TELEFONO' => '602-8523697', 'DIRECCION' => 'Calle 18 #22-56',      'TIPO' => 'Automotriz', 'ESTADO' => 'Inactivo' }, ;
+	{ 'ROW_ID' => 8,  'CODCLI' => 'CLI008', 'NOMCLI' => 'Hotel Estrella Dorada',        'CIUDAD' => 'Santa Marta', 'TELEFONO' => '605-4561238', 'DIRECCION' => 'Av. Playa Grande #5-10', 'TIPO' => 'Hotelería',  'ESTADO' => 'Activo' }, ;
+	{ 'ROW_ID' => 9,  'CODCLI' => 'CLI009', 'NOMCLI' => 'Supermercados La Canasta',     'CIUDAD' => 'Pereira',     'TELEFONO' => '606-9517538', 'DIRECCION' => 'Carrera 8 #24-36',      'TIPO' => 'Retail',     'ESTADO' => 'Activo' }, ;
+	{ 'ROW_ID' => 10, 'CODCLI' => 'CLI010', 'NOMCLI' => 'Universidad Tecnológica',     'CIUDAD' => 'Manizales',   'TELEFONO' => '606-2587413', 'DIRECCION' => 'Av. Universitaria #100-200','TIPO' => 'Educación','ESTADO' => 'Activo' }, ;
+	{ 'ROW_ID' => 11, 'CODCLI' => 'CLI011', 'NOMCLI' => 'Textiles del Norte S.A.',     'CIUDAD' => 'Valledupar',  'TELEFONO' => '605-7418529', 'DIRECCION' => 'Zona Industrial #25-30',  'TIPO' => 'Textil',     'ESTADO' => 'Activo' }, ;
+	{ 'ROW_ID' => 12, 'CODCLI' => 'CLI012', 'NOMCLI' => 'Café Premium Colombia',        'CIUDAD' => 'Armenia',     'TELEFONO' => '606-3692580', 'DIRECCION' => 'Av. Centenario #15-25',  'TIPO' => 'Alimentos',  'ESTADO' => 'Activo' }, ;
+	{ 'ROW_ID' => 13, 'CODCLI' => 'CLI013', 'NOMCLI' => 'Panificadora El Trigo',        'CIUDAD' => 'Cúcuta',      'TELEFONO' => '605-1239874', 'DIRECCION' => 'Calle 10 #2-30',        'TIPO' => 'Alimentos',  'ESTADO' => 'Activo' }, ;
+	{ 'ROW_ID' => 14, 'CODCLI' => 'CLI014', 'NOMCLI' => 'Agropecuaria La Esperanza',    'CIUDAD' => 'Ibagué',      'TELEFONO' => '608-7418523', 'DIRECCION' => 'Vereda El Progreso Km 2', 'TIPO' => 'Agrícola',  'ESTADO' => 'Activo' }, ;
+	{ 'ROW_ID' => 15, 'CODCLI' => 'CLI015', 'NOMCLI' => 'Centro Comercial Oasis',       'CIUDAD' => 'Bello',       'TELEFONO' => '604-1593578', 'DIRECCION' => 'Av. Principal #1-50',    'TIPO' => 'Retail',     'ESTADO' => 'Activo' }, ;
+	{ 'ROW_ID' => 16, 'CODCLI' => 'CLI016', 'NOMCLI' => 'Editorial Letras Libres',      'CIUDAD' => 'Tunja',       'TELEFONO' => '608-7531594', 'DIRECCION' => 'Calle 7 #9-12',         'TIPO' => 'Editorial',  'ESTADO' => 'Inactivo' }, ;
+	{ 'ROW_ID' => 17, 'CODCLI' => 'CLI017', 'NOMCLI' => 'Servicios Energéticos S.A.S.', 'CIUDAD' => 'Sincelejo',   'TELEFONO' => '605-3579514', 'DIRECCION' => 'Carrera 11 #20-30',     'TIPO' => 'Servicios',  'ESTADO' => 'Activo' }, ;
+	{ 'ROW_ID' => 18, 'CODCLI' => 'CLI018', 'NOMCLI' => 'Transportes Rápidos',         'CIUDAD' => 'Neiva',       'TELEFONO' => '608-6543210', 'DIRECCION' => 'Terminal de Transporte', 'TIPO' => 'Transporte', 'ESTADO' => 'Activo' }, ;
+	{ 'ROW_ID' => 19, 'CODCLI' => 'CLI019', 'NOMCLI' => 'Galería de Arte Moderno',      'CIUDAD' => 'Popayán',     'TELEFONO' => '604-2143658', 'DIRECCION' => 'Calle del Museo #3-2',   'TIPO' => 'Cultural',   'ESTADO' => 'Activo' }, ;
+	{ 'ROW_ID' => 20, 'CODCLI' => 'CLI020', 'NOMCLI' => 'Consultoría TechPro',         'CIUDAD' => 'Yopal',       'TELEFONO' => '601-9846123', 'DIRECCION' => 'Av. Principal #50-10',   'TIPO' => 'Servicios',  'ESTADO' => 'Inactivo' }, ;
+	{ 'ROW_ID' => 21, 'CODCLI' => 'CLI021', 'NOMCLI' => 'Distribuciones Norte',         'CIUDAD' => 'Montería',    'TELEFONO' => '605-8796421', 'DIRECCION' => 'Zona Industrial #7-5',   'TIPO' => 'Logística',  'ESTADO' => 'Activo' }, ;
+	{ 'ROW_ID' => 22, 'CODCLI' => 'CLI022', 'NOMCLI' => 'Academia de Música Harmonia',  'CIUDAD' => 'Florencia',   'TELEFONO' => '608-3219876', 'DIRECCION' => 'Cra 4 #6-8',            'TIPO' => 'Educación',  'ESTADO' => 'Activo' }  ;
+	}
+
+
+
+local aColumnas := { ;
+	{ 'title' => "Código",          'field' => "CODCLI", 'width' => 100 }, ;
+	{ 'title' => "Nombre Completo", 'field' => "NOMCLI", 'width' => 300 }, ;
+	{ 'title' => "Ciudad",          'field' => "CIUDAD", 'width' => 120 }, ;
+	{ 'title' => "Teléfono",        'field' => "TELEFONO", 'width' => 130 }, ;
+	{ 'title' => "Dirección",       'field' => "DIRECCION", 'width' => 250 }, ;
+	{ 'title' => "Tipo",            'field' => "TIPO", 'width' => 120 }, ;
+	{ 'title' => "Estado",          'field' => "ESTADO", 'width' => 100 } ;
+	}
+
+// Opciones para el browse
+local aOptions := { ;
+	'index'  => 'ROW_ID', ;
+	'selectable' => .T., ;
+	'selectableRollingSelection' => .T., ;
+	'selectableRangeMode' => "click", ;
+	'movableColumns' => .F. ;
+	}
+
+local aBotones := { ;
+	{ 'id' => 'btn_add', 'label' => 'Adicionar', 'icon' => '<i class="fas fa-plus"></i>', 'link' => 'nuevocilindro' }, ;
+	{ 'id' => 'btn_edit', 'label' => 'Editar', 'icon' => '<i class="fas fa-edit"></i>', 'action' => 'editar_cliente' }, ;
+	{ 'id' => 'btn_delete', 'label' => 'Borrar', 'icon' => '<i class="fas fa-trash"></i>', 'action' => 'eliminar_cliente' }, ;
+	{ 'id' => 'btn_view', 'label' => 'Ver', 'icon' => '<i class="fas fa-eye"></i>', 'action' => 'ver_cliente' }, ;
+	{ 'id' => 'btn_export', 'label' => 'Exportar', 'icon' => '<i class="fas fa-file-export"></i>', 'action' => 'exportar_cliente' }, ;
+	{ 'id' => 'btn_informes', 'label' => 'Informes', 'icon' => '<i class="fas fa-file-export"></i>', 'action' => 'informes_cliente' }, ;
+	{ 'id' => 'btn_refresh', 'label' => 'Refrescar', 'icon' => '<i class="fas fa-sync"></i>', 'action' => 'refrescar_cliente' } ;
+	}
+
+
+local aEvents := { ;
+	{ 'name' => 'rowClick' , 'proc' => 'prueba' } ;
+}
+
+// Autenticación
+if ! Authorization()
+	return nil
+endif
+
+
+hCredentials := USession( 'credentials' )
+
+DEFINE WEB oWeb TITLE 'Home - Cilindros'
+
+DEFINE FORM o ID 'form_home_cilindros'  API 'api_folder'  ON INIT 'prueba' OF oWeb
+o:lFluid := .t.
+
+
+		HTML o  
+
+			<style>
+			
+				#mycontainer {
+					border:2px solid green;					
+					width:100%					
+				}
+				
+				#mycontainer-2 {
+					border:2px solid red;					
+					width:100%					
+				}				
+			</style>
+
+		ENDTEXT	
+
+INIT FORM o 
+
+// Configuración de botones para la barra de herramientas
+
+	DIV o STYLE 'box-shadow: 5px 2px 8px rgba(0,0,0,0.35); padding: 10px; border-radius: 8px;'
+
+		ROWGROUP 	o
+			COL o GRID 4
+			
+			// Usar el componente de tabla
+				HTML o FILE 'components/tabla_browse.html' PARAMS o, 'clientes', aColumnas, aData, aEvents, aOptions
+				//HTML o FILE 'components/barra_paginacion.html' PARAMS o, 'nav', 0
+
+			ENDCOL o
+
+			COL o GRID 8
+				// Incluir un contenedor para el mapa
+				//HTML o INLINE 'id="mapa" style="width:100%;height:400px;border:1px solid #ccc;border-radius:8px;"<br><div id="mapa"></div>'
+				//HTML o INLINE 'id="mycontainer" style="width:100%;height:400px;border:1px solid #ccc;border-radius:8px;"<br><div id="mycontainer"></div>'
+
+			// HTML o INLINE 'id="mycontainer"<br><div id="mycontainer"></div>'
+			DIV o ID 'mycontainer'
+			
+			ENDDIV o
+
+		ENDCOL o
+	ENDROW o
+
+	ENDDIV o
+
+ENDFORM o
+
+INIT WEB oWeb RETURN
+?>

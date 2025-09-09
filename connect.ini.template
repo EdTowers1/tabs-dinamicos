@@ -1,0 +1,9 @@
+; Archivo plantilla para parametros de conexión
+; Copia este archivo como 'connect.ini' y configura tus credenciales
+[mariadb]
+   host=localhost
+   user=tu_usuario
+   psw=tu_contraseña
+   flags=0
+   port=3306
+   dbname=tu_base_de_datos

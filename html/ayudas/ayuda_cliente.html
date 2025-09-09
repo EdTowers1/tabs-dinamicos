@@ -1,0 +1,60 @@
+<?prg
+#include "./lib/tweb/tweb.ch"
+
+LOCAL o, oDlg, oBrw, aOptions, aColumnas, aEvents, aData
+
+// Definir las columnas de la tabla
+aColumnas := { ;
+    { 'title' => "Código", 'field' => "CODCLI", 'width' => 120 }, ;
+    { 'title' => "Nombre Completo", 'field' => "NOMCLI", 'width' => 320 } ;
+}
+
+// Opciones para el browse
+aOptions := { ;
+    'height' => '350px', ;
+    'index' => 'ROW_ID', ;
+    'selectable' => .T., ;
+    'selectableRollingSelection' => .T., ;
+    'selectableRangeMode' => "click", ;
+    'movableColumns' => .F. ;
+}
+
+aEvents := { ;
+	{ 'name' => 'tableBuilt' , 'proc' => 'exe_consulta' }, ;
+	{ 'name' => 'rowClick' , 'proc' => 'seleccionar_cliente' } ;
+}
+
+DEFINE DIALOG oDlg 		
+
+    DEFINE FORM o ID 'dlg_clientes' API 'api_clientes' OF oDlg			
+    
+    INIT FORM o 	
+
+        ROW o 			
+            DIV o STYLE 'margin-bottom: 2px; width: 100%;'
+                GET ID 'cFiltro' GRID 12 ;
+                VALUE "" ;
+                LABEL 'Filtro de busqueda :' ;
+                PLACEHOLDER 'Ingrese el nombre o código del cliente...' ;
+                BUTTON '<i class="fas fa-search"></i>';
+                ACTION 'filtrar_clientes' ;
+                OF o
+            ENDDIV o
+        ENDROW o
+
+        ROW o
+            COL o GRID 12
+                // Usar el componente de tabla
+                HTML o FILE 'components/tabla_browse.html' PARAMS o, 'clientes', aColumnas, aData, aEvents, aOptions
+            ENDCOL o
+        ENDROW o
+
+				DIV o STYLE 'margin-top:5px;'
+                // Incluir componente de paginación
+                HTML o FILE 'components/barra_paginacion.html' PARAMS o, 'nav', 0
+        ENDDIV o
+
+    ENDFORM o
+
+INIT DIALOG oDlg RETURN
+?>

@@ -1,0 +1,47 @@
+<?prg 
+    local o
+    local cFormId
+    
+    // Recibir parámetros - el objeto form y opcionalmente el ID del formulario
+    o := pvalue(1)
+    if valtype(pvalue(2)) == 'C'
+        cFormId := pvalue(2)
+    else
+        cFormId := 'form_pedidos'  // Valor predeterminado
+    endif
+    
+    // Crear la barra de navegación usando tweb
+            DIV o CLASS 'navbar navbar-menumodulos navbar-expand-lg'
+                
+                    // Botón toggler para móviles
+                    HTML o INLINE '<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#form_pedidos-navbarScroll" aria-controls="form_pedidos-navbarScroll" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>'
+                
+                    // Botones de navegación - lado izquierdo
+                    DIV o CLASS 'collapse navbar-collapse' ID 'navbarScroll'
+
+                      HTML o INLINE  '<ul class="navbar-nav mr-auto my-2 my-lg-0 navbar-nav-scroll" style="max-height: 100px;">'
+                        HTML o INLINE  '<li class="nav-item">'
+                          BUTTON ID 'enabler' LABEL 'Nuevo' ACTION 'enable' CLASS 'nav-link' OF o
+                        HTML o INLINE  '</li>'
+
+                        HTML o INLINE  '<li class="nav-item">'
+                          BUTTON ID 'btn-editar' LABEL 'Editar' CLASS 'nav-link' DISABLED OF o
+                        HTML o INLINE  '</li>'
+
+                        HTML o INLINE  '<li class="nav-item">'  
+                          BUTTON ID 'btnBorrar' LABEL 'Borrar' CLASS 'nav-link' DISABLED OF o
+                        HTML o INLINE  '</li>'
+
+                      HTML o INLINE '</ul>'
+                    
+                    
+                    // Búsqueda - lado derecho
+                    DIV o CLASS 'd-flex'
+                        GET ID 'cBuscar' VALUE '' PLACEHOLDER 'Localizar' CLASS 'form-control mr-2' OF o
+                        BUTTON ID 'btnLocalizar' LABEL 'Localizar' CLASS 'btn btn-outline-success' OF o
+                    ENDDIV o
+                  ENDDIV o
+            ENDDIV o
+    
+    RETU ''
+?>

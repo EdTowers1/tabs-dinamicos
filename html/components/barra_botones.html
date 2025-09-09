@@ -1,0 +1,34 @@
+<?prg
+// Componente de Barra de Botones
+// Parámetros: 
+//   - oFormulario: Objeto del formulario padre
+//   - aBotones: Array con configuración de botones
+//   - cEstilo: Estilo CSS adicional (opcional)
+
+local oForm := pvalue(1)
+local aBotones := pvalue(2)
+local cEstilo := iif( valtype(pvalue(3)) == 'C' .and. !empty(pvalue(3)), pvalue(3), 'margin-top: 5px; display: flex; gap: 5px; align-items: center; padding-left: 15px;' )
+local aBoton, i
+?>
+
+DIV oForm STYLE cEstilo
+<?prg
+for i := 1 to iif( valtype(aBotones) == 'A', len(aBotones), 0 )
+    aBoton := aBotones[i]
+?>
+BUTTON ID
+<?prg QOut(aBoton['id']) ?> LABEL
+<?prg QOut(aBoton['label']) ?> ICON
+<?prg QOut(aBoton['icon']) ?>
+<?prg if hb_HHasKey(aBoton, 'link') ?>
+LINK
+<?prg QOut(aBoton['link']) ?>
+<?prg else ?>
+ACTION
+<?prg QOut(aBoton['action']) ?>
+<?prg endif ?>
+GRID 0 OF oForm
+<?prg
+next
+?>
+ENDDIV oForm

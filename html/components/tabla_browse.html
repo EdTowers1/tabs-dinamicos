@@ -1,0 +1,50 @@
+<?prg
+// Componente de Tabla Browse
+// Parámetros: 
+//   - oFormulario: Objeto del formulario padre
+//   - cID: ID del browse
+//   - aColumnas: Array con configuración de columnas
+//   - aData: Datos para la tabla
+//   - aEvents: Array con eventos personalizados
+//   - hOpciones: Hash con opciones adicionales (opcional)
+
+local oForm := pvalue(1)
+local cID := pvalue(2)
+local aColumnas := pvalue(3)
+local aData := pvalue(4)
+local aEvents := pvalue(5)  // Ahora el 5º parámetro es aEvents
+local hOpciones := iif( valtype(pvalue(6)) == 'A', pvalue(6), {=>} ) 
+local aCol, i
+
+// Opciones por defecto
+if !('height' $ hOpciones)
+    hOpciones['height'] := '500px'
+endif
+if !('index' $ hOpciones)
+    hOpciones['index'] := 'ROW_ID'
+endif
+if !('selectable' $ hOpciones)
+    hOpciones['selectable'] := .T.
+endif
+if !('selectableRollingSelection' $ hOpciones)
+    hOpciones['selectableRollingSelection'] := .T.
+endif
+if !('selectableRangeMode' $ hOpciones)
+    hOpciones['selectableRangeMode'] := "click"
+endif
+if !('movableColumns' $ hOpciones)
+    hOpciones['movableColumns'] := .F.
+endif
+
+// Ya no definimos eventos por defecto
+// Los eventos vienen completamente de la vista que llama al componente
+
+DEFINE BROWSE oBrw ID cID OPTIONS hOpciones EVENTS aEvents OF oForm
+    for i := 1 to len(aColumnas)
+        aCol := aColumnas[i]
+        COL oCol TO oBrw CONFIG { 'title' => (aCol['title']), 'field' => (aCol['field']), 'width' => (aCol['width']), 'resizable' => .f. }
+    next
+    INIT BROWSE oBrw DATA aData
+
+RETU ''
+?>

@@ -1,0 +1,105 @@
+<?prg
+#include "lib/tweb/tweb.ch" 
+
+  local o, oWeb
+	local hData := {=>}
+
+	// Verificar si hay una sesión activa para no volver a renderizar el login
+	if USessionReady()
+    URedirect( '/' )
+    return nil
+	endif
+	
+	DEFINE WEB oWeb TITLE 'Cilindros - Acceso al Sistema' 					
+		
+		DEFINE FORM o ID 'myform' API 'api_security' OF oWeb 
+			o:lDessign := .f.			
+			o:lFluid := .t.			
+		
+		INIT FORM o 		
+				
+			hData[ 'id_user' ] 	:= 'user'
+			hData[ 'id_psw' ]  	:= 'password'
+			hData[ 'placeholder_user' ]	:= 'admin'
+			hData[ 'placeholder_psw'  ]	:= '1234'
+			hData[ 'action' ]  	:= 'login'
+			hData[ 'image' ] 	:= 'files/images/ut.ico'
+		
+			HTML o PARAMS hData
+				<style>					
+					
+					body { 
+						background-color: transparent;
+					}
+				
+					html {
+						height:100%;
+						margin: 0;								
+						-webkit-background-size: cover;
+						-moz-background-size: cover;
+						-o-background-size: cover;
+						background-size: cover;							
+					}
+
+					.mycontainer {
+						margin: auto;
+						margin-top: 100px;
+						margin-left: 0;
+						width:300px;
+						border: 2px solid gray;
+						border-radius: 10px;
+						background-color:white;
+					}
+					
+					@media only screen
+					and (min-width: 320px)
+					and (max-width: 736px)
+					{			
+						.mycontainer {
+							margin-left: auto;			
+						}
+					}
+					
+					.myblock {
+						width: 250px;
+						margin: auto;
+					}
+
+				</style>
+			ENDTEXT 	
+
+			ROW o CLASS 'mycontainer'
+			
+				COL o GRID 0 CLASS 'myblock'
+					
+					ROWGROUP o	
+						SAY LABEL '<br><h3><i class="fa fa-user-circle" aria-hidden="true"></i>&nbsp;Acceso al Sistema de cilindros</h3><hr>' ALIGN 'center' GRID 12 OF o						
+					ENDROW o						
+				
+					ROWGROUP o	HALIGN 'center'															
+						GET ID HB_HGetDef( hData, 'id_user', 'user' )  VALUE '' GRID 12 ;
+							PLACEHOLDER HB_HGetDef( hData, 'placeholder_user', '' ) ;
+							LABEL '<i class="fa fa-user" aria-hidden="true"></i>&nbsp;Usuario'  ;
+							OF o						
+					ENDROW o	
+
+					ROWGROUP o																
+						GET ID HB_HGetDef( hData, 'id_psw', 'password' )  TYPE 'password' VALUE '' GRID 12 ;
+							PLACEHOLDER HB_HGetDef( hData, 'placeholder_psw', '' ) ;
+							LABEL '<i class="fa fa-unlock-alt" aria-hidden="true"></i>&nbsp;Contraseña' ;
+							OF o						
+					ENDROW o	
+					
+					ROWGROUP o HALIGN 'center'																
+						BUTTON LABEL 'Ingresar' ACTION HB_HGetDef( hData, 'action', 'login' ) ;
+							ICON '<i class="fa fa-paper-plane" aria-hidden="true"></i>&nbsp;&nbsp;';
+							CLASS 'btn btn-outline-dark' ALIGN 'center' WIDTH '150px' GRID 12 OF o						
+					ENDROW o						
+				
+				ENDCOL o	
+			ENDROW o
+
+		ENDFORM o
+
+	INIT WEB oWeb RETURN
+?>
