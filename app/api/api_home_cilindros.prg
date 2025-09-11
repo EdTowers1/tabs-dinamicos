@@ -1,10 +1,8 @@
-function api_recepcion( oDom )
+function api_home_cilindros( oDom )
 
     do case
-        case oDom:GetProc() == 'helpCli'								; DoHelpCli( oDom )
-        case oDom:GetProc() == 'select_cliente'					        ;  DoSelecionar_Cliente(oDom)
-        case oDom:GetProc() == 'enable'								    ;  DoEnable(oDom)
-        case oDom:GetProc() == 'getValues'	; ( oDom:SetMsg( 'Check console!' ), oDom:console( oDom:GetAll(), 'GETALL' ) ) //oDom:Console( oDom:GetList(.f.) ) )
+        case oDom:GetProc() == 'ayuda_cliente'								; DoAyudaCliente( oDom )
+        case oDom:GetProc() == 'seleccionar_cliente'					        ;  DoSelecionar_Cliente(oDom)
 
             otherwise 				
             oDom:SetError( "Proc don't defined => " + oDom:GetProc())
@@ -14,12 +12,12 @@ retu oDom:Send()
 
 // -------------------------------------------------- //
 
-static function DoHelpCli( oDom )
+static function DoAyudaCliente( oDom )
 
     local cHtml := ULoadHtml( '../html/ayudas/ayuda_cliente.html'  )
     local o    := {=>}    
 
-    o[ 'title' ]           := 'Clientes'
+    o[ 'title' ]           := 'Ayuda de clientes'
     o[ 'centerVertical' ]  := .T.
     o[ 'draggable' ]       := .f.
     o[ 'focus']            := 'dlg_clientes-cFiltro'
@@ -71,25 +69,12 @@ static function DoSelecionar_Cliente(oDom)
         "Código: " + hFull['codcli'] + CHR(13) + CHR(10) + ;
         "Nombre: " + hb_strtoutf8(hFull['nomcli']) + CHR(13) + CHR(10)
 
-    oDom:setDlg('dlg_recepcion_cilindros')
+    oDom:setDlg('home_cilindros')
     oDom:Set('cInfoCliente', cInfoCliente)
-    oDom:focus('cOrden')
+    // oDom:focus('cOrden')
     CloseConnect(oDom, hInfo)
 
 return nil
 
 // -------------------------------------------------- //
 
-static function DoEnable(oDom)
-
-    // Habilitar campos del formulario
-    oDom:Enable( 'cCliente' )
-    oDom:Enable( 'cOrden' )
-    oDom:Enable( 'cFecha' )
-    oDom:Enable( 'cTipo' )
-    oDom:Enable('btn_cCliente_1')
-
-    // Habilitar botones del menú de navegación (ahora están en tweb)
-    oDom:Enable('btn-editar')
-
-return nil

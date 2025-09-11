@@ -1,7 +1,7 @@
 <?prg
 #include "lib/tweb/tweb.ch" 
 
-LOCAL o, oWeb, hCredentials, oFolder
+LOCAL o, oWeb, hCredentials
 
 //	Auth system...
 if ! Authorization()
@@ -14,12 +14,22 @@ hCredentials := USession( 'credentials' )
 DEFINE WEB oWeb TITLE 'Sistema de Gestión de Cilindros'
 
     // Incluir la barra lateral
-    HTML oWeb FILE 'components/sidebar.html' PARAMS oWeb, 'Inicio', hCredentials
+		HTML oWeb FILE 'components/sidebar.html' PARAMS oWeb, 'Inicio', hCredentials
 
     DEFINE FORM o ID 'myform' API 'api_folder' OF oWeb
         o:lFluid := .t.
+
+				
     
     INIT FORM o
+
+		
+
+							
+						//HTML o 
+						//<button type="button" class="btn btn-primary" data-live data-onclick="recepcion" onclick="openTabFromSidebar('recepcion','Cilindros')" id=myform-btn1>Abrir Módulo Cilindros</button>
+						//ENDTEXT
+
 
         // Contenedor principal para el sistema de pestañas
         DIV o ID 'tabsContainer' CLASS 'folder-content' STYLE 'flex:1;display:flex;flex-direction:column;height:calc(100vh - 60px);'
@@ -61,15 +71,14 @@ DEFINE WEB oWeb TITLE 'Sistema de Gestión de Cilindros'
 									var paneId = btn.getAttribute('data-target');
 									var pane = document.getElementById(paneId);
 									if (pane) pane.classList.add('show', 'active');
-									var color = btn.getAttribute('data-color');
-									tabContent.style.backgroundColor = color || defaultBg;
+									// No set background color on tabContent to keep parent styles (removed inline background)
 								}
 
-								// Crear una pestaña con iframe
-								window.addIframeTab = function (url, customId, title, makeActive) {
-									console.log("Intentando crear iframe tab con URL:", url);
+								// Crear una pestaña recuperando HTML mediante fetch y mostrando el fragmento directamente
+								window.addFetchedTab = function (url, customId, title, makeActive) {
+									console.log("Creando pestaña con fetch para URL:", url);
 									tabCounter++; var idx = tabCounter;
-									var tabId = customId || ('tab-ifr-' + idx);
+									var tabId = customId || ('tab-fet-' + idx);
 									// Asignar color a la pestaña usando el array colors (ciclo)
 									var color = colors[(idx - 1) % colors.length] || defaultBg;
 									var paneId = tabId + '-pane';
@@ -91,11 +100,37 @@ DEFINE WEB oWeb TITLE 'Sistema de Gestión de Cilindros'
 
 									var pane = document.createElement('div');
 									pane.className = 'tab-pane fade'; pane.id = paneId; pane.setAttribute('role', 'tabpanel'); pane.setAttribute('aria-labelledby', btnTab.id);
-
-									// Crear el iframe con estilo mejorado para ocupar todo el espacio disponible
-									pane.innerHTML = '<iframe src="' + url + '" style="width:100%;height:100%;border:solid 2px ;"></iframe>';
+									pane.innerHTML = '<div class="d-flex justify-content-center align-items-center h-100"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Cargando...</span></div></div>';
 									tabContent.appendChild(pane);
-									if (makeActive) activarTab(btnTab);
+
+									// Fetch the fragment and insert it into the pane (no iframe)
+									fetch(url, { credentials: 'same-origin' }).then(function (res) {
+										if (!res.ok) throw new Error('HTTP ' + res.status + ' - ' + res.statusText);
+										return res.text();
+									}).then(function (html) {
+										// Insert raw HTML fragment into the pane. This will render within the parent's document
+										pane.innerHTML = html;
+
+										// Execute any scripts that were in the loaded HTML
+										var scripts = pane.querySelectorAll('script');
+										scripts.forEach(function (oldScript) {
+											var newScript = document.createElement('script');
+											// Copy attributes
+											Array.from(oldScript.attributes).forEach(function (attr) {
+												newScript.setAttribute(attr.name, attr.value);
+											});
+											// Copy content
+											newScript.appendChild(document.createTextNode(oldScript.innerHTML));
+											// Replace old script with new one to trigger execution
+											oldScript.parentNode.replaceChild(newScript, oldScript);
+										});
+
+										if (makeActive) activarTab(btnTab);
+									}).catch(function (err) {
+										pane.innerHTML = '<div class="alert alert-danger m-3">Error cargando módulo: ' + err.message + '</div>';
+										console.error('addFetchedTab error:', err);
+										if (makeActive) activarTab(btnTab);
+									});
 								}
 
 								// Crear una pestaña con contenido HTML personalizado
@@ -156,16 +191,16 @@ DEFINE WEB oWeb TITLE 'Sistema de Gestión de Cilindros'
 										return;
 									}
 
-									// Si no existe, creamos una nueva pestaña con iframe
+									// Si no existe, creamos una nueva pestaña cargando el contenido por fetch
 									console.log("Creando nueva pestaña para", modulo);
 
-									// Usar directamente la ruta que el servidor expone
-									// Según app.prg: oServer:Route( 'recepcion', '../html/views/home_cilindros.html' )
-									var url = modulo; // Por ejemplo: 'recepcion'
+									// Construir la URL para el fetch apuntando a la ruta pública registrada en el servidor
+									// (el servidor tiene: oServer:Route( 'recepcion', 'recepcion' ) )
+									var url = modulo;
 									console.log("URL del servidor:", url);
 
-									// Usar la función addIframeTab existente
-									addIframeTab(url, tabId, titulo, true);
+									// Usar la función addFetchedTab para insertar fragmentos (sin iframe)
+									addFetchedTab(url, tabId, titulo, true);
 								}
 
 								// Aviso antes de salir si hay pestañas abiertas
@@ -176,9 +211,92 @@ DEFINE WEB oWeb TITLE 'Sistema de Gestión de Cilindros'
 									}
 								});
 
-								// Función para abrir la vista de home_cilindros
+								// Función para abrir la vista de home_cilindros (vistas locales). Usamos addCustomTab
 								window.abrirModulo = function (modulo, titulo) {
-									addIframeTab('views/' + modulo + '.html', modulo + '-tab', titulo, true);
+									// Verificar si ya existe una pestaña con este ID
+									var tabId = modulo + '-tab';
+									var existingTab = document.getElementById(tabId + '-btn');
+
+									if (existingTab) {
+										// Si la pestaña ya existe, solo la activamos
+										console.log("La pestaña de vista ya existe, activándola...");
+										activarTab(existingTab);
+										return;
+									}
+
+									// Cargamos la vista local y la insertamos como HTML (no iframe)
+									fetch('views/' + modulo + '.html', { credentials: 'same-origin' }).then(function (res) {
+										if (!res.ok) throw new Error('HTTP ' + res.status + ' - ' + res.statusText);
+										return res.text();
+									}).then(function (html) {
+										// Crear pestaña personalizada con ID específico
+										tabCounter++; var idx = tabCounter;
+										var paneId = tabId + '-pane';
+										var color = colors[(idx - 1) % colors.length] || defaultBg;
+										var li = document.createElement('li'); li.className = 'nav-item'; li.setAttribute('role', 'presentation');
+										var btnTab = document.createElement('button');
+										btnTab.className = 'nav-link'; btnTab.type = 'button'; btnTab.id = tabId + '-btn';
+										btnTab.setAttribute('role', 'tab'); btnTab.setAttribute('aria-controls', paneId);
+										btnTab.setAttribute('aria-selected', 'false'); btnTab.setAttribute('data-target', paneId);
+										btnTab.setAttribute('data-color', color);
+										btnTab.style.backgroundColor = color;
+										btnTab.style.borderLeft = '4px solid ' + color;
+										btnTab.innerHTML = '<span>' + titulo + '</span><span class="tab-close" title="Cerrar">&times;</span>';
+
+										btnTab.addEventListener('click', function (e) { if (e.target.classList.contains('tab-close')) return; activarTab(btnTab); });
+										btnTab.querySelector('.tab-close').addEventListener('click', function (e) { e.stopPropagation(); if (confirm('¿Deseas cerrar "' + titulo + '"?')) { li.remove(); var paneToRemove = document.getElementById(paneId); if (paneToRemove) paneToRemove.remove(); var first = tabList.querySelector('.nav-link'); if (first) activarTab(first); else tabContent.style.backgroundColor = defaultBg; } });
+
+										li.appendChild(btnTab); tabList.appendChild(li);
+
+										var pane = document.createElement('div');
+										pane.className = 'tab-pane fade'; pane.id = paneId; pane.setAttribute('role', 'tabpanel'); pane.setAttribute('aria-labelledby', btnTab.id);
+										pane.innerHTML = html;
+
+										// Execute any scripts that were in the loaded HTML
+										var scripts = pane.querySelectorAll('script');
+										scripts.forEach(function (oldScript) {
+											var newScript = document.createElement('script');
+											// Copy attributes
+											Array.from(oldScript.attributes).forEach(function (attr) {
+												newScript.setAttribute(attr.name, attr.value);
+											});
+											// Copy content
+											newScript.appendChild(document.createTextNode(oldScript.innerHTML));
+											// Replace old script with new one to trigger execution
+											oldScript.parentNode.replaceChild(newScript, oldScript);
+										});
+
+										tabContent.appendChild(pane);
+
+										activarTab(btnTab);
+									}).catch(function (err) {
+										console.error('Error cargando vista:', err);
+										// Crear pestaña de error con ID específico
+										tabCounter++; var idx = tabCounter;
+										var paneId = tabId + '-pane';
+										var color = colors[(idx - 1) % colors.length] || defaultBg;
+										var li = document.createElement('li'); li.className = 'nav-item'; li.setAttribute('role', 'presentation');
+										var btnTab = document.createElement('button');
+										btnTab.className = 'nav-link'; btnTab.type = 'button'; btnTab.id = tabId + '-btn';
+										btnTab.setAttribute('role', 'tab'); btnTab.setAttribute('aria-controls', paneId);
+										btnTab.setAttribute('aria-selected', 'false'); btnTab.setAttribute('data-target', paneId);
+										btnTab.setAttribute('data-color', color);
+										btnTab.style.backgroundColor = color;
+										btnTab.style.borderLeft = '4px solid ' + color;
+										btnTab.innerHTML = '<span>' + titulo + ' (Error)</span><span class="tab-close" title="Cerrar">&times;</span>';
+
+										btnTab.addEventListener('click', function (e) { if (e.target.classList.contains('tab-close')) return; activarTab(btnTab); });
+										btnTab.querySelector('.tab-close').addEventListener('click', function (e) { e.stopPropagation(); if (confirm('¿Deseas cerrar "' + titulo + '"?')) { li.remove(); var paneToRemove = document.getElementById(paneId); if (paneToRemove) paneToRemove.remove(); var first = tabList.querySelector('.nav-link'); if (first) activarTab(first); else tabContent.style.backgroundColor = defaultBg; } });
+
+										li.appendChild(btnTab); tabList.appendChild(li);
+
+										var pane = document.createElement('div');
+										pane.className = 'tab-pane fade'; pane.id = paneId; pane.setAttribute('role', 'tabpanel'); pane.setAttribute('aria-labelledby', btnTab.id);
+										pane.innerHTML = '<div class="alert alert-danger m-3">Error cargando vista: ' + err.message + '</div>';
+										tabContent.appendChild(pane);
+
+										activarTab(btnTab);
+									});
 								}
 							});
 						</script>

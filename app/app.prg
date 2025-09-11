@@ -63,11 +63,12 @@ function WebServer()
 	oServer:Route( 'login'						, '../html/security/login.html' )
 	oServer:Route( 'recepcion'						, '../html/views/home_cilindros.html' )
 	oServer:Route( 'nuevocilindro'				, '../html/modulos/recepcion_cilindros.html')
-	oServer:Route( 'prueba'						, '../html/views/prueba.html' )
-
+	// oServer:Route( 'prueba'						, '../html/views/prueba.html' )
+	
 
 	// ---------------- Rutas para funciones ----------------
-	oServer:Route( 'logout'						, 'logout' ) 
+	oServer:Route( 'logout'						, 'logout' )
+	// oServer:Route( 'recepcion', 'recepcion' )
 
 
 

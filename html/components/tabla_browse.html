@@ -15,9 +15,22 @@ local aData := pvalue(4)
 local aEvents := pvalue(5)  // Ahora el 5º parámetro es aEvents
 local tmp := pvalue(6)
 local aCol, i
-local hOpciones := iif( valtype(pvalue(6)) == 'A', pvalue(6), {=>} ) 
+// Normalizar opciones: aceptar hash o array de pares { {key, val}, ... }
+local hOpciones := {=>}
+if valtype( tmp ) == 'H'
+    hOpciones := tmp
+elseif valtype( tmp ) == 'A'
+    // convertir array de pares a hash
+    for i := 1 to len( tmp )
+        if valtype( tmp[i] ) == 'A' .and. len( tmp[i] ) >= 2
+            hOpciones[ tmp[i][1] ] := tmp[i][2]
+        endif
+    next
+endif
 
-
+if !('height' $ hOpciones)
+    hOpciones['height'] := '500px'
+endif
 if !('index' $ hOpciones)
     hOpciones['index'] := 'ROW_ID'
 endif
@@ -34,13 +47,18 @@ if !('movableColumns' $ hOpciones)
     hOpciones['movableColumns'] := .F.
 endif
 
+
 // Ya no definimos eventos por defecto
 // Los eventos vienen completamente de la vista que llama al componente
 
 DEFINE BROWSE oBrw ID cID OPTIONS hOpciones EVENTS aEvents OF oForm
     for i := 1 to len(aColumnas)
         aCol := aColumnas[i]
-        COL oCol TO oBrw CONFIG { 'title' => (aCol['title']), 'field' => (aCol['field']), 'width' => (aCol['width']), 'resizable' => .f. }
+        if ('sortable' $ hOpciones) .and. !hOpciones['sortable']
+            COL oCol TO oBrw CONFIG { 'title' => (aCol['title']), 'field' => (aCol['field']), 'width' => (aCol['width']), 'resizable' => .f., 'headerSort' => .f. }
+        else
+            COL oCol TO oBrw CONFIG { 'title' => (aCol['title']), 'field' => (aCol['field']), 'width' => (aCol['width']), 'resizable' => .f. }
+        endif
     next
     INIT BROWSE oBrw DATA aData
 

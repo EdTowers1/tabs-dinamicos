@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,45 +10,53 @@
   <link href="https://unpkg.com/tabulator-tables@5.5.0/dist/css/tabulator.min.css" rel="stylesheet">
   <style>
     /* Reglas globales y de estructura */
-    html, body {
+    html,
+    body {
       height: 100%;
       margin: 0;
     }
+
     .container-fluid {
       height: 100%;
     }
+
     .left-pane {
       display: flex;
       flex-direction: column;
       height: 100%;
-      padding: 10px; /* Aquí se agregó el padding de 5px */
+      padding: 10px;
+      /* Aquí se agregó el padding de 5px */
       background-color: #E2E8F0;
-     
-       
+
+
     }
+
     .right-pane {
       display: flex;
       overflow: hidden;
-     
+
     }
+
     .right-pane img {
       width: 100%;
       height: 100%;
       object-fit: cover;
     }
-    
+
     /* Componentes específicos */
     .tabulator {
-      font-size: 24px;
+      font-size: 12px;
       flex-grow: 1;
 
     }
+
     .navbar-custom {
       background-color: #e9ecef;
       padding: 0.15rem 0.5rem;
       flex-shrink: 0;
       min-height: 36px;
     }
+
     .navbar-custom .btn {
       background: none;
       border: none;
@@ -55,6 +64,7 @@
       font-size: 16px;
       padding: 0.15rem 0.25rem;
     }
+
     .navbar-custom .btn:hover {
       color: #000;
     }
@@ -64,13 +74,16 @@
       .row.h-100 {
         flex-direction: column;
       }
+
       .left-pane {
         height: 40%;
         overflow-y: auto;
       }
+
       .right-pane {
         height: 60%;
       }
+
       #navbarButtons .d-flex {
         justify-content: center;
         width: 100%;
@@ -78,10 +91,33 @@
     }
   </style>
 </head>
+
 <body>
   <div class="container-fluid">
     <div class="row h-100">
       <div class="col-12 col-md-4 left-pane">
+
+        <nav class="navbar navbar-expand-sm navbar-custom mb-1">
+          <div class="container-fluid p-0">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarButtons"
+              aria-controls="navbarButtons" aria-expanded="false" aria-label="Toggle navigation">
+              <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarButtons">
+              <div class="d-flex">
+                <button class="btn me-2" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Agregar">
+                  <i class="fas fa-plus"></i>
+                </button>
+                <button class="btn me-2" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Guardar">
+                  <i class="fas fa-save"></i>
+                </button>
+                <button class="btn" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Eliminar">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </nav>
 
         <div id="example-table"></div>
       </div>
@@ -93,73 +129,74 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://unpkg.com/tabulator-tables@5.5.0/dist/js/tabulator.min.js"></script>
   <script>
-    document.addEventListener("DOMContentLoaded", function() {
+    document.addEventListener("DOMContentLoaded", function () {
       // Inicializar tooltips
       const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
       tooltipTriggerList.forEach(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
-      
+
       // Datos de ejemplo
       const tableData = [
-        {id:1, nombre:"Producto 1", cantidad:10, precio:100},
-        {id:2, nombre:"Producto 2", cantidad:5, precio:200},
-        {id:3, nombre:"Producto 3", cantidad:15, precio:150},
-        {id:4, nombre:"Producto 4", cantidad:8, precio:120},
-        {id:5, nombre:"Producto 5", cantidad:20, precio:80},
-        {id:6, nombre:"Producto 6", cantidad:3, precio:300},
-        {id:7, nombre:"Producto 7", cantidad:12, precio:90},
-        {id:8, nombre:"Producto 8", cantidad:7, precio:110},
-        {id:9, nombre:"Producto 9", cantidad:25, precio:60},
-        {id:10, nombre:"Producto 10", cantidad:14, precio:140},
-        {id:11, nombre:"Producto 11", cantidad:6, precio:210},
-        {id:12, nombre:"Producto 12", cantidad:9, precio:95},
-        {id:13, nombre:"Producto 13", cantidad:18, precio:75},
-        {id:14, nombre:"Producto 14", cantidad:4, precio:260},
-        {id:15, nombre:"Producto 15", cantidad:11, precio:130},
-        {id:16, nombre:"Producto 16", cantidad:2, precio:400},
-        {id:17, nombre:"Producto 17", cantidad:16, precio:85},
-        {id:18, nombre:"Producto 18", cantidad:13, precio:155},
-        {id:19, nombre:"Producto 19", cantidad:21, precio:70},
-        {id:20, nombre:"Producto 20", cantidad:17, precio:115},
-        {id:21, nombre:"Producto 21", cantidad:1, precio:500},
-        {id:22, nombre:"Producto 22", cantidad:19, precio:65},
-        {id:23, nombre:"Producto 23", cantidad:22, precio:55},
-        {id:24, nombre:"Producto 24", cantidad:30, precio:45},
-        {id:25, nombre:"Producto 25", cantidad:2, precio:750},
-        {id:26, nombre:"Producto 26", cantidad:27, precio:40},
-        {id:27, nombre:"Producto 27", cantidad:33, precio:35},
-        {id:28, nombre:"Producto 28", cantidad:5, precio:420},
-        {id:29, nombre:"Producto 29", cantidad:8, precio:215},
-        {id:30, nombre:"Producto 30", cantidad:16, precio:125},
-        {id:31, nombre:"Producto 31", cantidad:13, precio:180},
-        {id:32, nombre:"Producto 32", cantidad:21, precio:95},
-        {id:33, nombre:"Producto 33", cantidad:29, precio:50},
-        {id:34, nombre:"Producto 34", cantidad:4, precio:330},
-        {id:35, nombre:"Producto 35", cantidad:12, precio:145},
-        {id:36, nombre:"Producto 36", cantidad:7, precio:210},
-        {id:37, nombre:"Producto 37", cantidad:19, precio:88},
-        {id:38, nombre:"Producto 38", cantidad:14, precio:160},
-        {id:39, nombre:"Producto 39", cantidad:24, precio:60},
-        {id:40, nombre:"Producto 40", cantidad:6, precio:490},
-        {id:41, nombre:"Producto 41", cantidad:18, precio:72},
-        {id:42, nombre:"Producto 42", cantidad:11, precio:135},
-        {id:43, nombre:"Producto 43", cantidad:20, precio:99},
+        { id: 1, nombre: "Producto 1", cantidad: 10, precio: 100 },
+        { id: 2, nombre: "Producto 2", cantidad: 5, precio: 200 },
+        { id: 3, nombre: "Producto 3", cantidad: 15, precio: 150 },
+        { id: 4, nombre: "Producto 4", cantidad: 8, precio: 120 },
+        { id: 5, nombre: "Producto 5", cantidad: 20, precio: 80 },
+        { id: 6, nombre: "Producto 6", cantidad: 3, precio: 300 },
+        { id: 7, nombre: "Producto 7", cantidad: 12, precio: 90 },
+        { id: 8, nombre: "Producto 8", cantidad: 7, precio: 110 },
+        { id: 9, nombre: "Producto 9", cantidad: 25, precio: 60 },
+        { id: 10, nombre: "Producto 10", cantidad: 14, precio: 140 },
+        { id: 11, nombre: "Producto 11", cantidad: 6, precio: 210 },
+        { id: 12, nombre: "Producto 12", cantidad: 9, precio: 95 },
+        { id: 13, nombre: "Producto 13", cantidad: 18, precio: 75 },
+        { id: 14, nombre: "Producto 14", cantidad: 4, precio: 260 },
+        { id: 15, nombre: "Producto 15", cantidad: 11, precio: 130 },
+        { id: 16, nombre: "Producto 16", cantidad: 2, precio: 400 },
+        { id: 17, nombre: "Producto 17", cantidad: 16, precio: 85 },
+        { id: 18, nombre: "Producto 18", cantidad: 13, precio: 155 },
+        { id: 19, nombre: "Producto 19", cantidad: 21, precio: 70 },
+        { id: 20, nombre: "Producto 20", cantidad: 17, precio: 115 },
+        { id: 21, nombre: "Producto 21", cantidad: 1, precio: 500 },
+        { id: 22, nombre: "Producto 22", cantidad: 19, precio: 65 },
+        { id: 23, nombre: "Producto 23", cantidad: 22, precio: 55 },
+        { id: 24, nombre: "Producto 24", cantidad: 30, precio: 45 },
+        { id: 25, nombre: "Producto 25", cantidad: 2, precio: 750 },
+        { id: 26, nombre: "Producto 26", cantidad: 27, precio: 40 },
+        { id: 27, nombre: "Producto 27", cantidad: 33, precio: 35 },
+        { id: 28, nombre: "Producto 28", cantidad: 5, precio: 420 },
+        { id: 29, nombre: "Producto 29", cantidad: 8, precio: 215 },
+        { id: 30, nombre: "Producto 30", cantidad: 16, precio: 125 },
+        { id: 31, nombre: "Producto 31", cantidad: 13, precio: 180 },
+        { id: 32, nombre: "Producto 32", cantidad: 21, precio: 95 },
+        { id: 33, nombre: "Producto 33", cantidad: 29, precio: 50 },
+        { id: 34, nombre: "Producto 34", cantidad: 4, precio: 330 },
+        { id: 35, nombre: "Producto 35", cantidad: 12, precio: 145 },
+        { id: 36, nombre: "Producto 36", cantidad: 7, precio: 210 },
+        { id: 37, nombre: "Producto 37", cantidad: 19, precio: 88 },
+        { id: 38, nombre: "Producto 38", cantidad: 14, precio: 160 },
+        { id: 39, nombre: "Producto 39", cantidad: 24, precio: 60 },
+        { id: 40, nombre: "Producto 40", cantidad: 6, precio: 490 },
+        { id: 41, nombre: "Producto 41", cantidad: 18, precio: 72 },
+        { id: 42, nombre: "Producto 42", cantidad: 11, precio: 135 },
+        { id: 43, nombre: "Producto 43", cantidad: 20, precio: 99 },
       ];
-      
+
       // Crear Tabulator
       const table = new Tabulator("#example-table", {
         data: tableData,
         layout: "fitColumns",
         columns: [
-          {title:"ID", field:"id"},
-          {title:"Nombre", field:"nombre"},
-          {title:"Cantidad", field:"cantidad", hozAlign:"right"},
-          {title:"Precio", field:"precio", hozAlign:"right", widthGrow:1},
+          { title: "ID", field: "id" },
+          { title: "Nombre", field: "nombre" },
+          { title: "Cantidad", field: "cantidad", hozAlign: "right" },
+          { title: "Precio", field: "precio", hozAlign: "right", widthGrow: 1 },
         ],
       });
-      
+
       // Ajustar tamaño al cambiar ventana
       window.addEventListener("resize", () => table.redraw(true));
     });
   </script>
 </body>
+
 </html>

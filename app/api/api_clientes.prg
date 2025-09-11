@@ -17,7 +17,7 @@ return oDom:Send()
 
 // -------------------------------------------------- //
 
-Function DoExeConsulta( oDom )
+static function DoExeConsulta( oDom )
 	local hInfo := InitInfo( oDom )
 
 	// Abrir base de datos
@@ -320,10 +320,10 @@ static function DoSelecionar_Cliente (oDom)
 				"Código: " + hFull['codcli'] + CHR(13) + CHR(10) + ;
 				"Nombre: " + hb_strtoutf8(hFull['nomcli']) + CHR(13) + CHR(10) ;
 													
-			oDom:SetDlg( 'form_pedidos' )
+			oDom:SetDlg( 'home_cilindros' )
 			oDom:Set( 'cInfoCliente', cInfoCliente )
 			oDom:DialogClose('ayuda_cliente')
-			oDom:focus('cOrden')
+			// oDom:focus('cOrden')
 		endif
 		
 		CloseConnect( oDom, hInfo )

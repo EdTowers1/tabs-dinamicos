@@ -256,6 +256,10 @@ nav.navbar .navbar-toggler-icon {
   overflow: hidden;
 }
 
+.tab-content {
+border: solid 1px ;
+}
+
 .tab-close {
   color: #dc3545;
 }

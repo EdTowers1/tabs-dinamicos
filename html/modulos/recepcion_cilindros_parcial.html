@@ -1,98 +1,109 @@
 <?prg
 #include "./lib/tweb/tweb.ch"
 
-local o := pvalue(1)  // Recibe el objeto del formulario padre
-
+local o, oDlg1
 local dFechaActual := Date()
 local cFechaFormateada := Str(Year(dFechaActual), 4) + "-" + StrZero(Month(dFechaActual), 2) + "-" + StrZero(Day(dFechaActual), 2)
 
-local aBotonesHeader := { ;
-	{ 'id' => 'btn_save_header', 'action' => 'guardar', 'class' => 'btn-primary', 'icon' => 'fas fa-save', 'label' => 'Guardar' }, ;
-	{ 'id' => 'btn_cancel_header', 'link' => 'recepcion', 'class' => 'btn-secondary', 'icon' => 'fas fa-times', 'label' => 'Cancelar' } ;
-}
 
-// Variables para la tabla de cilindros
-local aOptions := { 'height' => '150px', 'layout' => 'fitColumns', 'selectable' => .t. }
-local aData := { ;
+
+DEFINE DIALOG oDlg1 
+
+	DEFINE FORM o ID 'dlg_recepcion_cilindros' API 'api_recepcion' OF oDlg1
+
+		INIT FORM o
+
+		ROWGROUP o
+
+COL o GRID 12
+
+	DIV o STYLE 'box-shadow: 5px 2px 8px rgba(0,0,0,0.35); margin: 5px; padding: 10px; border-radius: 8px;'
+
+
+// Usar el componente de header
+// HTML o FILE 'components/header_titulo_botones.html' PARAMS o, 'Ingreso de Cilindros de pruebas', 'fas fa-wrench', aBotonesHeader	
+
+ROW o CLASS 'gx-3'
+							
+// columna izquierda
+COL o GRID 6 CLASS 'col-lg-6 col-12'
+ROWGROUP o
+GET ID 'cCliente' GRID 12	;
+	VALUE ''	;
+	PROMPT 'Cliente' ;
+	VALID 'select_cliente' ;
+	PLACEHOLDER 'Ingrese el código del cliente' ;
+	BUTTON '<i class="fas fa-search"></i>' ;
+	ACTION 'helpCli' ;
+	;
+	OF o
+GET MEMO ID 'cInfoCliente' GRID 12;
+	VALUE 'Debe seleccionar un cliente para ver su información';
+	ROWS 5 STYLE 'resize: none; margin-top: 5px;';
+	DISABLED ;
+	OF o
+ENDROW o
+ENDCOL o
+
+// columna derecha
+COL o GRID 6 CLASS 'col-lg-6 col-12'
+
+ROWGROUP o
+GET ID 'cOrden'  GRID 12	;		  		
+	LABEL 'Orden # :'		;
+	PLACEHOLDER 'Número de orden'	;
+	DISABLED ;
+	OF o
+GET ID 'cFecha'   GRID 12	;
+	VALUE cFechaFormateada		;
+	LABEL 'Fecha :'			;
+	TYPE 'date'				;
+	DISABLED ;
+	OF o
+SELECT oSelect ID 'cTipo' GRID 12	;
+	PROMPT 'LLenado', 'Reparación', 'Traslado';
+	VALUES 'L', 'R', 'T'	;
+	LABEL 'Tipo :'			;
+	ONCHANGE 'getValues'	;
+	OF o
+ENDROW o
+ENDCOL o
+ENDROW o
+ENDDIV o
+
+
+DIV o STYLE 'box-shadow: 5px 2px 8px rgba(0,0,0,0.35); margin: 5px; padding: 10px; border-radius: 8px;'
+// tabla sencilla: datos de prueba de cilindros
+aOptions := { 'height' => '150px', 'layout' => 'fitColumns', 'selectable' => .t. }
+aData := { ;
 	{ 'id' => 1, 'brand' => 'Bosch', 'diameter' => 50, 'length' => 200, 'pressure' => 250, 'material' => 'Acero', 'stock' => 12 },;
 	{ 'id' => 2, 'brand' => 'Schrader', 'diameter' => 40, 'length' => 180, 'pressure' => 200, 'material' => 'Aluminio', 'stock' => 5 },;
 	{ 'id' => 3, 'brand' => 'Parker', 'diameter' => 65, 'length' => 220, 'pressure' => 300, 'material' => 'Acero', 'stock' => 8 },;
 	{ 'id' => 4, 'brand' => 'Veta', 'diameter' => 32, 'length' => 150, 'pressure' => 150, 'material' => 'Acero Inox', 'stock' => 20 },;
 	{ 'id' => 5, 'brand' => 'Generic', 'diameter' => 80, 'length' => 250, 'pressure' => 350, 'material' => 'Titanio', 'stock' => 2 };
 	}
-local aFilter := { 'brand', 'diameter', 'length', 'pressure', 'material', 'stock' }
 
-// Primera sección - Header y formulario principal
-DIV o STYLE 'box-shadow: 5px 2px 8px rgba(0,0,0,0.35); margin: 5px; padding: 10px; border-radius: 8px;'
+// contenedor para filtros de la tabla
+HTML o INLINE '<div id="mini-myfilter"></div>'
 
-	// Usar el componente de header
-	HTML o FILE 'components/header_titulo_botones.html' PARAMS o, 'Ingreso de Cilindros', 'fas fa-wrench', aBotonesHeader
+// filtros disponibles para la tabla de cilindros
+aFilter := { 'brand', 'diameter', 'length', 'pressure', 'material', 'stock' }
 
-	ROW o CLASS 'gx-3'
-		
-		// columna izquierda
-		COL o GRID 6 CLASS 'col-lg-6 col-12'
-			ROW o
-				GET ID 'cCliente' GRID 12	;
-					VALUE ''	;
-					PROMPT 'Cliente' ;
-					VALID 'select_cliente' ;
-					PLACEHOLDER 'Ingrese el código del cliente' ;
-					BUTTON '<i class="fas fa-search"></i>' ;
-					ACTION 'helpCli' ;
-					OF o
-				GET MEMO ID 'cInfoCliente' GRID 12;
-					VALUE 'Debe seleccionar un cliente para ver su información';
-					ROWS 5 STYLE 'resize: none; margin-top: 5px;';
-					DISABLED ;
-					OF o
-			ENDROW o
-		ENDCOL o
-
-		// columna derecha
-		COL o GRID 6 CLASS 'col-lg-6 col-12'
-			ROW o
-				GET ID 'cOrden'  GRID 12	;		  		
-					LABEL 'Orden # :'		;
-					PLACEHOLDER 'Número de orden'	;
-					DISABLED ;
-					OF o
-				GET ID 'cFecha'   GRID 12	;
-					VALUE cFechaFormateada		;
-					LABEL 'Fecha :'			;
-					TYPE 'date'				;
-					DISABLED ;
-					OF o
-				SELECT oSelect ID 'cTipo' GRID 12	;
-					PROMPT 'LLenado', 'Reparación', 'Traslado';
-					VALUES 'L', 'R', 'T'	;
-					LABEL 'Tipo :'			;
-					ONCHANGE 'getValues'	;
-					OF o
-			ENDROW o
-		ENDCOL o
-	ENDROW o
-
+DEFINE BROWSE oBrw ID 'mini' OPTIONS aOptions FILTER aFilter FILTER_ID 'mini-myfilter' TITLE '<h6>Lista de Cilindros</h6>' OF o
+COL oCol TO oBrw CONFIG { 'title' => "ID", 'field' => "id" }
+COL oCol TO oBrw CONFIG { 'title' => "Marca", 'field' => "brand" }
+COL oCol TO oBrw CONFIG { 'title' => "Diámetro (mm)", 'field' => "diameter", 'hozAlign' => 'center' }
+COL oCol TO oBrw CONFIG { 'title' => "Largo (mm)", 'field' => "length", 'hozAlign' => 'center' }
+COL oCol TO oBrw CONFIG { 'title' => "Presión (bar)", 'field' => "pressure", 'hozAlign' => 'center' }
+COL oCol TO oBrw CONFIG { 'title' => "Material", 'field' => "material" }
+COL oCol TO oBrw CONFIG { 'title' => "Stock", 'field' => "stock", 'hozAlign' => 'center' }
+INIT BROWSE oBrw DATA aData
 ENDDIV o
 
-// Segunda sección - Tabla de cilindros
-DIV o STYLE 'box-shadow: 5px 2px 8px rgba(0,0,0,0.35); margin: 5px; padding: 10px; border-radius: 8px;'
 
-	// contenedor para filtros de la tabla
-	HTML o INLINE '<div id="mini-myfilter"></div>'
+ENDROW o
 
-	// Definir el browse de cilindros
-	DEFINE BROWSE oBrw ID 'mini' OPTIONS aOptions FILTER aFilter FILTER_ID 'mini-myfilter' TITLE '<h6>Lista de Cilindros</h6>' OF o
-		COL oCol TO oBrw CONFIG { 'title' => "ID", 'field' => "id" }
-		COL oCol TO oBrw CONFIG { 'title' => "Marca", 'field' => "brand" }
-		COL oCol TO oBrw CONFIG { 'title' => "Diámetro (mm)", 'field' => "diameter", 'hozAlign' => 'center' }
-		COL oCol TO oBrw CONFIG { 'title' => "Largo (mm)", 'field' => "length", 'hozAlign' => 'center' }
-		COL oCol TO oBrw CONFIG { 'title' => "Presión (bar)", 'field' => "pressure", 'hozAlign' => 'center' }
-		COL oCol TO oBrw CONFIG { 'title' => "Material", 'field' => "material" }
-		COL oCol TO oBrw CONFIG { 'title' => "Stock", 'field' => "stock", 'hozAlign' => 'center' }
-	INIT BROWSE oBrw DATA aData
+		ENDFORM o
 
-ENDDIV o
-
-RETU ''
+INIT DIALOG oDlg1 RETURN
 ?>

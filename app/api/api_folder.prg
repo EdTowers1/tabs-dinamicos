@@ -1,9 +1,12 @@
+#include "../../lib/tweb/tweb.ch" 
+
+
 function api_folder( oDom )
 
 	do case
-			case oDom:GetProc() == 'prueba'        ; DoPrueba( oDom )
+		case oDom:GetProc() == 'recepcion'				; DoPanelRecepcion( oDom )
 
-			otherwise
+			otherwise	
 			oDom:SetError( "Proc don't defined => " + oDom:GetProc())
 	endcase
 
@@ -11,12 +14,125 @@ return oDom:Send()
 
 // -------------------------------------------------- //
 
+function DoPanelRecepcion( oDom )	//	Screen Embedded
 
-function DoPrueba( oDom )
+	local cHtml := MyRecepcionScreen()
 
-	    local cHtml := ULoadHtml( '../html/views/prueba.html'  )
+	oDom:Console('el llamado a la api funciona')  // ejemplo
+	oDom:SetPanel( nil, cHtml )
 
-	    // Asignar el HTML al contenedor especificado
-	    oDom:SetPanel( 'form_home_cilindros-mycontainer', cHtml )
+retu nil 
 
-	return nil
+// -------------------------------------------------- //
+
+function MyRecepcionScreen( cId )
+
+	LOCAL o, oDlg, hCredentials
+
+
+LOCAL aData := { ;
+	{ 'ROW_ID' => 1,  'CODCLI' => 'CLI001', 'NOMCLI' => 'Industrias ABC S.A.',           'CIUDAD' => 'Bogotá',       'TELEFONO' => '601-8547896', 'DIRECCION' => 'Calle 80 #45-23',      'TIPO' => 'Industrial', 'ESTADO' => 'Activo' }, ;
+	{ 'ROW_ID' => 2,  'CODCLI' => 'CLI002', 'NOMCLI' => 'Hospitales Unidos Ltda.',      'CIUDAD' => 'Medellín',    'TELEFONO' => '604-3216547', 'DIRECCION' => 'Av. El Poblado #32-15', 'TIPO' => 'Médico',     'ESTADO' => 'Activo' }, ;
+	{ 'ROW_ID' => 3,  'CODCLI' => 'CLI003', 'NOMCLI' => 'Restaurantes Gourmet',         'CIUDAD' => 'Cali',        'TELEFONO' => '602-5874123', 'DIRECCION' => 'Carrera 5 #12-45',      'TIPO' => 'Restaurante', 'ESTADO' => 'Inactivo' }, ;
+	{ 'ROW_ID' => 4,  'CODCLI' => 'CLI004', 'NOMCLI' => 'Laboratorios Químicos',        'CIUDAD' => 'Barranquilla','TELEFONO' => '605-9638520', 'DIRECCION' => 'Calle 72 #38-90',      'TIPO' => 'Laboratorio', 'ESTADO' => 'Activo' }, ;
+	{ 'ROW_ID' => 5,  'CODCLI' => 'CLI005', 'NOMCLI' => 'Constructora Edificar',        'CIUDAD' => 'Cartagena',   'TELEFONO' => '605-7894561', 'DIRECCION' => 'Av. San Martín #10-78', 'TIPO' => 'Construcción','ESTADO' => 'Activo' }, ;
+	{ 'ROW_ID' => 6,  'CODCLI' => 'CLI006', 'NOMCLI' => 'Clínica Santa María',          'CIUDAD' => 'Bucaramanga', 'TELEFONO' => '607-3214569', 'DIRECCION' => 'Carrera 27 #45-67',     'TIPO' => 'Médico',     'ESTADO' => 'Activo' }, ;
+	{ 'ROW_ID' => 7,  'CODCLI' => 'CLI007', 'NOMCLI' => 'Talleres Mecánicos del Sur',   'CIUDAD' => 'Pasto',       'TELEFONO' => '602-8523697', 'DIRECCION' => 'Calle 18 #22-56',      'TIPO' => 'Automotriz', 'ESTADO' => 'Inactivo' }, ;
+	{ 'ROW_ID' => 8,  'CODCLI' => 'CLI008', 'NOMCLI' => 'Hotel Estrella Dorada',        'CIUDAD' => 'Santa Marta', 'TELEFONO' => '605-4561238', 'DIRECCION' => 'Av. Playa Grande #5-10', 'TIPO' => 'Hotelería',  'ESTADO' => 'Activo' }, ;
+	{ 'ROW_ID' => 9,  'CODCLI' => 'CLI009', 'NOMCLI' => 'Supermercados La Canasta',     'CIUDAD' => 'Pereira',     'TELEFONO' => '606-9517538', 'DIRECCION' => 'Carrera 8 #24-36',      'TIPO' => 'Retail',     'ESTADO' => 'Activo' }, ;
+	{ 'ROW_ID' => 10, 'CODCLI' => 'CLI010', 'NOMCLI' => 'Universidad Tecnológica',     'CIUDAD' => 'Manizales',   'TELEFONO' => '606-2587413', 'DIRECCION' => 'Av. Universitaria #100-200','TIPO' => 'Educación','ESTADO' => 'Activo' }, ;
+	{ 'ROW_ID' => 11, 'CODCLI' => 'CLI011', 'NOMCLI' => 'Textiles del Norte S.A.',     'CIUDAD' => 'Valledupar',  'TELEFONO' => '605-7418529', 'DIRECCION' => 'Zona Industrial #25-30',  'TIPO' => 'Textil',     'ESTADO' => 'Activo' }, ;
+	{ 'ROW_ID' => 12, 'CODCLI' => 'CLI012', 'NOMCLI' => 'Café Premium Colombia',        'CIUDAD' => 'Armenia',     'TELEFONO' => '606-3692580', 'DIRECCION' => 'Av. Centenario #15-25',  'TIPO' => 'Alimentos',  'ESTADO' => 'Activo' }, ;
+	{ 'ROW_ID' => 13, 'CODCLI' => 'CLI013', 'NOMCLI' => 'Panificadora El Trigo',        'CIUDAD' => 'Cúcuta',      'TELEFONO' => '605-1239874', 'DIRECCION' => 'Calle 10 #2-30',        'TIPO' => 'Alimentos',  'ESTADO' => 'Activo' }, ;
+	{ 'ROW_ID' => 14, 'CODCLI' => 'CLI014', 'NOMCLI' => 'Agropecuaria La Esperanza',    'CIUDAD' => 'Ibagué',      'TELEFONO' => '608-7418523', 'DIRECCION' => 'Vereda El Progreso Km 2', 'TIPO' => 'Agrícola',  'ESTADO' => 'Activo' }, ;
+	{ 'ROW_ID' => 15, 'CODCLI' => 'CLI015', 'NOMCLI' => 'Centro Comercial Oasis',       'CIUDAD' => 'Bello',       'TELEFONO' => '604-1593578', 'DIRECCION' => 'Av. Principal #1-50',    'TIPO' => 'Retail',     'ESTADO' => 'Activo' }, ;
+	{ 'ROW_ID' => 16, 'CODCLI' => 'CLI016', 'NOMCLI' => 'Editorial Letras Libres',      'CIUDAD' => 'Tunja',       'TELEFONO' => '608-7531594', 'DIRECCION' => 'Calle 7 #9-12',         'TIPO' => 'Editorial',  'ESTADO' => 'Inactivo' }, ;
+	{ 'ROW_ID' => 17, 'CODCLI' => 'CLI017', 'NOMCLI' => 'Servicios Energéticos S.A.S.', 'CIUDAD' => 'Sincelejo',   'TELEFONO' => '605-3579514', 'DIRECCION' => 'Carrera 11 #20-30',     'TIPO' => 'Servicios',  'ESTADO' => 'Activo' }, ;
+	{ 'ROW_ID' => 18, 'CODCLI' => 'CLI018', 'NOMCLI' => 'Transportes Rápidos',         'CIUDAD' => 'Neiva',       'TELEFONO' => '608-6543210', 'DIRECCION' => 'Terminal de Transporte', 'TIPO' => 'Transporte', 'ESTADO' => 'Activo' }, ;
+	{ 'ROW_ID' => 19, 'CODCLI' => 'CLI019', 'NOMCLI' => 'Galería de Arte Moderno',      'CIUDAD' => 'Popayán',     'TELEFONO' => '604-2143658', 'DIRECCION' => 'Calle del Museo #3-2',   'TIPO' => 'Cultural',   'ESTADO' => 'Activo' }, ;
+	{ 'ROW_ID' => 20, 'CODCLI' => 'CLI020', 'NOMCLI' => 'Consultoría TechPro',         'CIUDAD' => 'Yopal',       'TELEFONO' => '601-9846123', 'DIRECCION' => 'Av. Principal #50-10',   'TIPO' => 'Servicios',  'ESTADO' => 'Inactivo' }, ;
+	{ 'ROW_ID' => 21, 'CODCLI' => 'CLI021', 'NOMCLI' => 'Distribuciones Norte',         'CIUDAD' => 'Montería',    'TELEFONO' => '605-8796421', 'DIRECCION' => 'Zona Industrial #7-5',   'TIPO' => 'Logística',  'ESTADO' => 'Activo' }, ;
+	{ 'ROW_ID' => 22, 'CODCLI' => 'CLI022', 'NOMCLI' => 'Academia de Música Harmonia',  'CIUDAD' => 'Florencia',   'TELEFONO' => '608-3219876', 'DIRECCION' => 'Cra 4 #6-8',            'TIPO' => 'Educación',  'ESTADO' => 'Activo' }, ;
+	{ 'ROW_ID' => 23, 'CODCLI' => 'CLI023', 'NOMCLI' => 'Técnicos Rápidos S.A.',        'CIUDAD' => 'Rionegro',    'TELEFONO' => '604-3217890', 'DIRECCION' => 'Parque Industrial #3-12', 'TIPO' => 'Servicios',  'ESTADO' => 'Activo' }, ;
+	{ 'ROW_ID' => 24, 'CODCLI' => 'CLI024', 'NOMCLI' => 'Floristería La Orquídea',      'CIUDAD' => 'Villavicencio','TELEFONO' => '601-5553344', 'DIRECCION' => 'Calle 2 #5-10',         'TIPO' => 'Comercio',   'ESTADO' => 'Activo' }, ;
+	{ 'ROW_ID' => 25, 'CODCLI' => 'CLI025', 'NOMCLI' => 'Software Andes',              'CIUDAD' => 'Popayán',     'TELEFONO' => '604-3332211', 'DIRECCION' => 'Av. Tecnología #7-45',   'TIPO' => 'Tecnología', 'ESTADO' => 'Activo' }, ;
+	{ 'ROW_ID' => 26, 'CODCLI' => 'CLI026', 'NOMCLI' => 'Panadería Doña Luisa',         'CIUDAD' => 'Sincelejo',   'TELEFONO' => '605-1122334', 'DIRECCION' => 'Calle 11 #4-6',         'TIPO' => 'Alimentos',  'ESTADO' => 'Activo' }, ;
+	{ 'ROW_ID' => 27, 'CODCLI' => 'CLI027', 'NOMCLI' => 'Minerales del Valle',          'CIUDAD' => 'Quibdó',      'TELEFONO' => '606-7788990', 'DIRECCION' => 'Zona Rural Km 10',      'TIPO' => 'Minería',    'ESTADO' => 'Inactivo' }, ;
+	{ 'ROW_ID' => 28, 'CODCLI' => 'CLI028', 'NOMCLI' => 'Agencia de Viajes Mundo',      'CIUDAD' => 'Pereira',     'TELEFONO' => '606-4455667', 'DIRECCION' => 'Cra 10 #20-30',         'TIPO' => 'Turismo',    'ESTADO' => 'Activo' }, ;
+	{ 'ROW_ID' => 29, 'CODCLI' => 'CLI029', 'NOMCLI' => 'Imprenta Central',             'CIUDAD' => 'Bucaramanga', 'TELEFONO' => '607-9988776', 'DIRECCION' => 'Carrera 14 #8-20',      'TIPO' => 'Servicios',  'ESTADO' => 'Activo' }, ;
+	{ 'ROW_ID' => 30, 'CODCLI' => 'CLI030', 'NOMCLI' => 'Lavandería El Fresco',         'CIUDAD' => 'Cali',        'TELEFONO' => '602-6677889', 'DIRECCION' => 'Calle 22 #11-9',        'TIPO' => 'Servicios',  'ESTADO' => 'Activo' }, ;
+	{ 'ROW_ID' => 31, 'CODCLI' => 'CLI031', 'NOMCLI' => 'Academia Futuro',              'CIUDAD' => 'Tunja',       'TELEFONO' => '608-5566778', 'DIRECCION' => 'Av. Educativa #2-18',   'TIPO' => 'Educación',  'ESTADO' => 'Inactivo' }, ;
+	{ 'ROW_ID' => 32, 'CODCLI' => 'CLI032', 'NOMCLI' => 'Electrónica Soluciones',       'CIUDAD' => 'Valledupar',  'TELEFONO' => '605-2233445', 'DIRECCION' => 'Zona Comercial #9-4',    'TIPO' => 'Electrónica','ESTADO' => 'Activo' }  ;
+	}
+
+
+
+local aColumnas := { ;
+	{ 'title' => "Código",          'field' => "CODCLI", 'width' => 100 }, ;
+	{ 'title' => "Nombre Completo", 'field' => "NOMCLI", 'width' => 300 }, ;
+	{ 'title' => "Ciudad",          'field' => "CIUDAD", 'width' => 120 }, ;
+	{ 'title' => "Teléfono",        'field' => "TELEFONO", 'width' => 130 }, ;
+	{ 'title' => "Dirección",       'field' => "DIRECCION", 'width' => 250 }, ;
+	{ 'title' => "Tipo",            'field' => "TIPO", 'width' => 120 }, ;
+	{ 'title' => "Estado",          'field' => "ESTADO", 'width' => 100 } ;
+	}
+
+// Opciones para el browse
+local aBotones := { ;
+	{ 'id' => 'btn_add', 'label' => 'Adicionar', 'icon' => '<i class="fas fa-plus"></i>', 'link' => 'nuevocilindro' }, ;
+	{ 'id' => 'btn_edit', 'label' => 'Editar', 'icon' => '<i class="fas fa-edit"></i>', 'action' => 'editar_cliente' }, ;
+	{ 'id' => 'btn_delete', 'label' => 'Borrar', 'icon' => '<i class="fas fa-trash"></i>', 'action' => 'eliminar_cliente' }, ;
+	{ 'id' => 'btn_view', 'label' => 'Ver', 'icon' => '<i class="fas fa-eye"></i>', 'action' => 'ver_cliente' }, ;
+	{ 'id' => 'btn_export', 'label' => 'Exportar', 'icon' => '<i class="fas fa-file-export"></i>', 'action' => 'exportar_cliente' }, ;
+	{ 'id' => 'btn_informes', 'label' => 'Informes', 'icon' => '<i class="fas fa-file-export"></i>', 'action' => 'informes_cliente' }, ;
+	{ 'id' => 'btn_refresh', 'label' => 'Refrescar', 'icon' => '<i class="fas fa-sync"></i>', 'action' => 'refrescar_cliente' } ;
+	}
+
+
+local aEvents := { ;
+	{ 'name' => 'rowClick' , 'proc' => 'prueba' } ;
+	}
+	
+	hb_default( @cId, 'zzz' )
+
+	DEFINE DIALOG oDlg
+
+		DEFINE FORM o ID cId  OF oDlg
+			o:lFluid  	:= .f.
+				
+			
+			
+				DIV o CLASS 'row h-100'
+
+	DIV o CLASS 'col-12 col-md-4 left-pane' STYLE 'height:100%;min-height:0;display:flex;flex-direction:column;'
+
+		DIV o ID 'example-table'
+			// Usar el componente de tabla
+			HTML o FILE 'components/tabla_browse.html' PARAMS o, 'clientes', aColumnas, aData, aEvents
+			HTML o FILE 'components/barra_paginacion.html' PARAMS o, 'nav', 0
+		ENDDIV o
+	
+	ENDDIV o
+
+	DIV o CLASS 'col-12 col-md-8 p-2 right-pane'
+
+
+	HTML o FILE 'modulos/recepcion_cilindros_parcial.html' PARAMS o
+
+	ENDDIV o
+
+
+	ENDDIV o
+				
+				
+			ENDFORM o	
+	
+	INIT DIALOG oDlg RETURN
+
+
+retu nil 
+
+function recepcion()
+
+	// Generar el HTML real usando la función de pantalla
+	retu MyRecepcionScreen()

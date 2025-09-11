@@ -36,7 +36,7 @@ COL o GRID 12
 
 
 // Usar el componente de header
-HTML o FILE 'components/header_titulo_botones.html' PARAMS o, 'Ingreso de Cilindros', 'fas fa-wrench', aBotonesHeader	
+HTML o FILE 'components/header_titulo_botones.html' PARAMS o, 'Ingreso de Cilindros de pruebas', 'fas fa-wrench', aBotonesHeader	
 
 ROW o CLASS 'gx-3'
 							
@@ -50,7 +50,6 @@ GET ID 'cCliente' GRID 12	;
 	PLACEHOLDER 'Ingrese el código del cliente' ;
 	BUTTON '<i class="fas fa-search"></i>' ;
 	ACTION 'helpCli' ;
-	;
 	OF o
 GET MEMO ID 'cInfoCliente' GRID 12;
 	VALUE 'Debe seleccionar un cliente para ver su información';

@@ -18,29 +18,29 @@ COL oForm GRID nGrid
 		HTML oForm INLINE '<div class="btn-group align-items-center">'
 			HTML oForm INLINE '<span class="me-2 small">Rows:</span>'
 			SELECT ID (cPrefijo + '_page_rows') PROMPT '10','50','100' VALUE '10' ;
-				GRID 0 ONCHANGE (cPrefijo + '_refresh') CLASS 'form-select form-select-sm' STYLE 'width:50px;padding:1px 4px;font-size:10px;height:28px;box-sizing:border-box;' OF oForm
+				GRID 0 ONCHANGE (cPrefijo + '_refresh') CLASS 'form-select form-select-sm' STYLE 'width:50px;padding:1px 4px;font-size:9px;height:28px;box-sizing:border-box;' OF oForm
 		HTML oForm INLINE '</div>'
 
 		HTML oForm INLINE '<div class="btn-group">'
 			BUTTON ID ('btn_' + cPrefijo + '_top') ACTION (cPrefijo + '_top') GRID 0 ;
 				CLASS 'btn btn-light border-0 rounded-circle btn-sm' ;
-				STYLE 'width:30px;height:30px;color:#6c757d;padding:0;display:inline-flex;align-items:center;justify-content:center;' ;
+				STYLE 'width:20px;height:20px;color:#6c757d;padding:0;display:inline-flex;align-items:center;justify-content:center;' ;
 				ICON '<i class="fa fa-step-backward fa-sm" aria-hidden="true"></i>' OF oForm
 			BUTTON ID ('btn_' + cPrefijo + '_prev') ACTION (cPrefijo + '_prev') GRID 0 ;
 				CLASS 'btn btn-light border-0 rounded-circle btn-sm mx-1' ;
-				STYLE 'width:30px;height:30px;color:#6c757d;padding:0;display:inline-flex;align-items:center;justify-content:center;' ;
+				STYLE 'width:20px;height:20px;color:#6c757d;padding:0;display:inline-flex;align-items:center;justify-content:center;' ;
 				ICON '<i class="fa fa-chevron-left fa-sm" aria-hidden="true"></i>' OF oForm
 			GET ID (cPrefijo + '_page') VALUE '1' GRID 0 ;
 				CLASS 'btn border-0' ;
-				STYLE 'width:50px;height:26px;font-size:12px;font-weight:500;padding:0 6px;border-radius:4px;text-align:center;display:inline-block;' ;
+				STYLE 'width:50px;height:22px;font-size:9px;text-align:center;display:inline-block;' ;
 				ALIGN 'center' ONCHANGE (cPrefijo + '_refresh') OF oForm
 			BUTTON ID ('btn_' + cPrefijo + '_next') ACTION (cPrefijo + '_next') GRID 0 ;
 				CLASS 'btn btn-light border-0 rounded-circle btn-sm mx-1' ;
-				STYLE 'width:30px;height:30px;color:#6c757d;padding:0;display:inline-flex;align-items:center;justify-content:center;' ;
+				STYLE 'width:20px;height:20px;color:#6c757d;padding:0;display:inline-flex;align-items:center;justify-content:center;' ;
 				ICON '<i class="fa fa-chevron-right fa-sm" aria-hidden="true"></i>' OF oForm
 			BUTTON ID ('btn_' + cPrefijo + '_end') ACTION (cPrefijo + '_end') GRID 0 ;
 				CLASS 'btn btn-light border-0 rounded-circle btn-sm' ;
-				STYLE 'width:30px;height:30px;color:#6c757d;padding:0;display:inline-flex;align-items:center;justify-content:center;' ;
+				STYLE 'width:20px;height:20px;color:#6c757d;padding:0;display:inline-flex;align-items:center;justify-content:center;' ;
 				ICON '<i class="fa fa-fast-forward fa-sm" aria-hidden="true"></i>' OF oForm
 		HTML oForm INLINE '</div>'
 	HTML oForm INLINE '</div>'

@@ -5,25 +5,26 @@ LOCAL o, oDlg, oBrw, aOptions, aColumnas, aEvents, aData
 
 // Definir las columnas de la tabla
 aColumnas := { ;
-    { 'title' => "Código", 'field' => "CODCLI", 'width' => 120 }, ;
-    { 'title' => "Nombre Completo", 'field' => "NOMCLI", 'width' => 320 } ;
+    { 'title' => "Código", 'field' => "CODCLI", 'width' => 120, 'resizable' => .f., 'headerSort' => .f.}, ;
+    { 'title' => "Nombre Completo", 'field' => "NOMCLI", 'width' => 320, 'resizable' => .f., 'headerSort' => .f.} ;
 }
 
 // Opciones para el browse
 aOptions := { ;
     'index' => 'ROW_ID', ;
-    'selectable' => .T., ;
-    'selectableRollingSelection' => .T., ;
-    'selectableRangeMode' => "click", ;
-    'movableColumns' => .F. ;
+    'height' => '400px', ;
+    'sortable' => .F.    ;
 }
 
+// eventos para la tabla
 aEvents := { ;
 	{ 'name' => 'tableBuilt' , 'proc' => 'exe_consulta' }, ;
 	{ 'name' => 'rowClick' , 'proc' => 'seleccionar_cliente' } ;
 }
 
-DEFINE DIALOG oDlg 		
+DEFINE DIALOG oDlg
+
+cId := 'myform_pruebas'
 
     DEFINE FORM o ID 'dlg_clientes' API 'api_clientes' OF oDlg			
     
