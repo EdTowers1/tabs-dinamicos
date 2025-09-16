@@ -5,8 +5,8 @@ LOCAL o, oDlg, oBrw, aOptions, aColumnas, aEvents, aData
 
 // Definir las columnas de la tabla
 aColumnas := { ;
-    { 'title' => "Código", 'field' => "CODCLI", 'width' => 120, 'resizable' => .f., 'headerSort' => .f.}, ;
-    { 'title' => "Nombre Completo", 'field' => "NOMCLI", 'width' => 320, 'resizable' => .f., 'headerSort' => .f.} ;
+    { 'title' => "Código del Cilindro", 'field' => "CODCLI", 'width' => 120, 'resizable' => .f., 'headerSort' => .f.}, ;
+    { 'title' => "Nombre", 'field' => "NOMCLI", 'width' => 320, 'resizable' => .f., 'headerSort' => .f.} ;
 }
 
 // Opciones para el browse
@@ -24,21 +24,9 @@ aEvents := { ;
 
 DEFINE DIALOG oDlg
 
-    DEFINE FORM o ID 'dlg_clientes' API 'api_clientes' OF oDlg			
+    DEFINE FORM o ID 'dlg_cilindros' OF oDlg
     
     INIT FORM o 	
-
-        ROW o 			
-            DIV o STYLE 'margin-bottom: 2px; width: 100%;'
-                GET ID 'cFiltro' GRID 12 ;
-                VALUE "" ;
-                LABEL 'Filtro de busqueda :' ;
-                PLACEHOLDER 'Ingrese el nombre o código del cliente...' ;
-                BUTTON '<i class="fas fa-search"></i>';
-                ACTION 'filtrar_clientes' ;
-                OF o
-            ENDDIV o
-        ENDROW o
 
         ROW o
             COL o GRID 12

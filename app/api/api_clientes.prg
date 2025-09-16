@@ -85,11 +85,11 @@ static function TotalRows( oDom, hInfo )
 
 	// Construir cláusula WHERE para filtro general
 	if !empty(hInfo['filtro'])
-		cWhere := "(UPPER(codcli) LIKE '%" + Upper(hInfo['filtro']) + "%' OR UPPER(nomcli) LIKE '%" + Upper(hInfo['filtro']) + "%')"
+		cWhere := "(UPPER(codcli) LIKE '%" + Upper(hInfo['filtro']) + "%' OR UPPER(Nombre_tercero) LIKE '%" + Upper(hInfo['filtro']) + "%')"
 	endif
 
 	// Construir SQL con filtros
-	cSql := "SELECT COUNT(*) as total FROM munmacli"
+	cSql := "SELECT COUNT(*) as total FROM m_terceros"
 	if !empty(cWhere)
 		cSql += " WHERE " + cWhere
 	endif
@@ -125,24 +125,24 @@ static function LoadRows( oDom, hInfo, lInitBrw )
 	hb_default( @lInitBrw, .f. )
 
 	if !empty(hInfo['filtro'])
-		cWhere := "(UPPER(codcli) LIKE '%" + Upper(hInfo['filtro']) + "%' OR UPPER(nomcli) LIKE '%" + Upper(hInfo['filtro']) + "%')"
+		cWhere := "(UPPER(codcli) LIKE '%" + Upper(hInfo['filtro']) + "%' OR UPPER(Nombre_tercero) LIKE '%" + Upper(hInfo['filtro']) + "%')"
 	endif
 
 	// Calcular OFFSET para la paginación
 	nRowInit := ( hInfo[ 'page' ] - 1 ) * hInfo[ 'page_rows']
 
 	// Construir SQL con LIMIT, OFFSET y WHERE para filtros
-	cSql := "SELECT row_id, codcli, nomcli FROM munmacli" 
+	cSql := "SELECT row_id, codcli, Nombre_tercero FROM m_terceros" 
 
 	if !empty(cWhere)
 		cSql += " WHERE " + cWhere
 	endif
 	
 	cSql += " ORDER BY CASE " + ;
-		"WHEN nomcli IS NULL OR nomcli = '' THEN 4 " + ; // Vacíos
-		"WHEN LEFT(LTRIM(nomcli), 1) BETWEEN 'A' AND 'Z' THEN 1 " + ; // Letras mayúsculas
-		"WHEN LEFT(LTRIM(nomcli), 1) BETWEEN '0' AND '9' THEN 2 " + ; // Números
-		"ELSE 3 END, nomcli"
+		"WHEN Nombre_tercero IS NULL OR Nombre_tercero = '' THEN 4 " + ; // Vacíos
+		"WHEN LEFT(LTRIM(Nombre_tercero), 1) BETWEEN 'A' AND 'Z' THEN 1 " + ; // Letras mayúsculas
+		"WHEN LEFT(LTRIM(Nombre_tercero), 1) BETWEEN '0' AND '9' THEN 2 " + ; // Números
+		"ELSE 3 END, Nombre_tercero"
 	
 	cSql += " LIMIT " + ltrim(str(hInfo[ 'page_rows' ])) + " OFFSET " + ltrim(str(nRowInit))
 
@@ -151,7 +151,7 @@ static function LoadRows( oDom, hInfo, lInitBrw )
 	IF oQry != NIL
 		oQry:gotop()
 		DO WHILE ! oQry:Eof()
-			aRow := { 'ROW_ID' => oQry:row_id, 'CODCLI' => oQry:codcli, 'NOMCLI' => hb_strtoutf8(oQry:nomcli) }
+			aRow := { 'ROW_ID' => oQry:row_id, 'CODCLI' => oQry:codcli, 'NOMCLI' => hb_strtoutf8(oQry:Nombre_tercero) }
 			AADD( aClientes, aRow )
 			oQry:Skip()
 		END
@@ -310,20 +310,19 @@ static function DoSelecionar_Cliente (oDom)
 		if ! OpenConnect( oDom, hInfo )
 			return nil
 		endif
-		
-		oQry := hInfo['db']:Query( "SELECT * FROM munmacli WHERE row_id = " + ltrim(str(nRowId)) + " LIMIT 1" )
-		
+
+		oQry := hInfo['db']:Query( "SELECT * FROM m_terceros WHERE row_id = " + ltrim(str(nRowId)) + " LIMIT 1" )
+
 		if oQry != NIL .and. !oQry:eof()
 			hFull := oQry:FillHRow()
 					
 			cInfoCliente := "ID: " + ltrim(str(hFull['row_id'])) + CHR(13) + CHR(10) + ;
 				"Código: " + hFull['codcli'] + CHR(13) + CHR(10) + ;
-				"Nombre: " + hb_strtoutf8(hFull['nomcli']) + CHR(13) + CHR(10) ;
+				"Nombre: " + hb_strtoutf8(hFull['nombre_tercero']) + CHR(13) + CHR(10) ;
 													
 			oDom:SetDlg( 'home_cilindros' )
 			oDom:Set( 'cInfoCliente', cInfoCliente )
 			oDom:DialogClose('ayuda_cliente')
-			// oDom:focus('cOrden')
 		endif
 		
 		CloseConnect( oDom, hInfo )

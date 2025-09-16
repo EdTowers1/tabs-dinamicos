@@ -5,18 +5,26 @@
 //   - cID: ID del browse
 //   - aColumnas: Array con configuración de columnas
 //   - aData: Datos para la tabla
-//   - aEvents: Array con eventos personalizados
+//   - aEvents: Array con eventos personalizados (opcional)
 //   - hOpciones: Hash con opciones adicionales (opcional)
 
 local oForm := pvalue(1)
 local cID := pvalue(2)
 local aColumnas := pvalue(3)
 local aData := pvalue(4)
-local aEvents := pvalue(5)  // Ahora el 5º parámetro es aEvents
+local aEvents := pvalue(5)  // Eventos opcionales
 local tmp := pvalue(6)
-local aCol, i
-// Normalizar opciones: aceptar hash o array de pares { {key, val}, ... }
+local aCol, i, hColCfg
 local hOpciones := {=>}
+
+// Si aEvents es NIL o no es array, inicializar como array vacío
+if valtype(aEvents) != 'A'
+    // Si el 5º parámetro no es array, probablemente son las opciones
+    tmp := aEvents
+    aEvents := {}
+endif
+// Normalizar opciones: aceptar hash o array de pares { {key, val}, ... }
+
 if valtype( tmp ) == 'H'
     hOpciones := tmp
 elseif valtype( tmp ) == 'A'
@@ -54,11 +62,39 @@ endif
 DEFINE BROWSE oBrw ID cID OPTIONS hOpciones EVENTS aEvents OF oForm
     for i := 1 to len(aColumnas)
         aCol := aColumnas[i]
-        if ('sortable' $ hOpciones) .and. !hOpciones['sortable']
-            COL oCol TO oBrw CONFIG { 'title' => (aCol['title']), 'field' => (aCol['field']), 'width' => (aCol['width']), 'resizable' => .f., 'headerSort' => .f. }
-        else
-            COL oCol TO oBrw CONFIG { 'title' => (aCol['title']), 'field' => (aCol['field']), 'width' => (aCol['width']), 'resizable' => .f. }
+        // ensure aCol is a hash
+        if valtype(aCol) != 'H'
+            aCol := { 'title' => '', 'field' => '' }
         endif
+
+        // Build column config safely, only adding keys that exist
+        hColCfg := {=>}
+        hColCfg['title'] := aCol['title']
+        hColCfg['field'] := aCol['field']
+
+        if ('width' $ aCol)
+            hColCfg['width'] := aCol['width']
+        endif
+        if ('widthGrow' $ aCol)
+            hColCfg['widthGrow'] := aCol['widthGrow']
+        endif
+        if ('minWidth' $ aCol)
+            hColCfg['minWidth'] := aCol['minWidth']
+        endif
+        if ('formatter' $ aCol)
+            hColCfg['formatter'] := aCol['formatter']
+        endif
+        if ('hozAlign' $ aCol)
+            hColCfg['hozAlign'] := aCol['hozAlign']
+        endif
+
+        // default behaviour for resizable
+        hColCfg['resizable'] := .f.
+        if ('sortable' $ hOpciones) .and. !hOpciones['sortable']
+            hColCfg['headerSort'] := .f.
+        endif
+
+        COL oCol TO oBrw CONFIG hColCfg
     next
     INIT BROWSE oBrw DATA aData
 
