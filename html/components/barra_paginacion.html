@@ -15,11 +15,11 @@ COL oForm GRID nGrid
 	GET ID (cPrefijo + '_page_total') VALUE '' HIDDEN OF oForm
 
 	HTML oForm INLINE '<div class="d-flex align-items-center justify-content-between">'
-		HTML oForm INLINE '<div class="btn-group align-items-center">'
-			HTML oForm INLINE '<span class="me-2 small">Rows:</span>'
-			SELECT ID (cPrefijo + '_page_rows') PROMPT '10','50','100' VALUE '10' ;
-				GRID 0 ONCHANGE (cPrefijo + '_refresh') CLASS 'form-select form-select-sm' STYLE 'width:50px;padding:1px 4px;font-size:9px;height:28px;box-sizing:border-box;' OF oForm
-		HTML oForm INLINE '</div>'
+		//HTML oForm INLINE '<div class="btn-group align-items-center">'
+			//HTML oForm INLINE '<span class="me-2 small">Rows:</span>'
+			//SELECT ID (cPrefijo + '_page_rows') PROMPT '10','50','100' VALUE '10' ;
+				//GRID 0 ONCHANGE (cPrefijo + '_refresh') CLASS 'form-select form-select-sm' STYLE 'width:50px;padding:1px 4px;font-size:9px;height:28px;box-sizing:border-box;' OF oForm
+		//HTML oForm INLINE '</div>'
 
 		HTML oForm INLINE '<div class="btn-group">'
 			BUTTON ID ('btn_' + cPrefijo + '_top') ACTION (cPrefijo + '_top') GRID 0 ;

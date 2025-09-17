@@ -234,21 +234,6 @@ nav.navbar .navbar-toggler-icon {
   padding: 18px 12px;
 }
 
-/* Estilos para el sistema de pestañas */
-/* .main-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  padding: 0.5rem;
-  overflow: hidden;
-}
-.tab-close {
-  color: #dc3545;
-}
-.tab-close:hover {
-  color: #a71d2a;
-} */
-
 /* Estilos para el sistema de pestañas - ajustados para altura correcta */
 
 .main-content {
@@ -267,7 +252,3 @@ border: solid 1px ;
   color: #a71d2a;
 }
 
-.tab-pane {
-  height: 100%;
-  width: 100%;
-}

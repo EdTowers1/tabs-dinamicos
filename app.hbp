@@ -16,6 +16,7 @@ app\api\api_clientes.prg
 app\api\api_home_cilindros.prg
 app\public\funciones_publicas.prg
 app\system\security.prg
+app\api\api_cilindros.prg
 
 
 

@@ -19,27 +19,18 @@ DEFINE WEB oWeb TITLE 'Sistema de Gestión de Cilindros'
     DEFINE FORM o ID 'myform' API 'api_folder' OF oWeb
         o:lFluid := .t.
 
-				
-    
     INIT FORM o
 
-		
+        DIV o ID 'tabsContainer' CLASS 'folder-content' 
 
-							
-						//HTML o 
-						//<button type="button" class="btn btn-primary" data-live data-onclick="recepcion" onclick="openTabFromSidebar('recepcion','Cilindros')" id=myform-btn1>Abrir Módulo Cilindros</button>
-						//ENDTEXT
+            DIV o CLASS 'content-area'
 
+                DIV o CLASS 'main-content' 
 
-        // Contenedor principal para el sistema de pestañas
-        DIV o ID 'tabsContainer' CLASS 'folder-content' STYLE 'flex:1;display:flex;flex-direction:column;height:calc(100vh - 60px);'
-            DIV o CLASS 'content-area' STYLE 'flex:1;display:flex;flex-direction:column;'
-                DIV o CLASS 'main-content' STYLE 'flex:1;display:flex;flex-direction:column;'
-                    // Definimos un DIV contenedor para las pestañas dinámicas
-                    DIV o ID 'tabsSystem' STYLE 'display:flex;flex-direction:column;height:100%;'
-                        // Estructura de pestañas que será manipulada por JavaScript
+                    DIV o ID 'tabsSystem'
+
                         HTML o INLINE '<ul class="nav nav-tabs" id="tabList" role="tablist"></ul>'	
-                        HTML o INLINE '<div class="tab-content" id="tabContent" style="flex:1;height:calc(100% - 42px);"></div>'
+                        HTML o INLINE '<div class="tab-content" id="tabContent"></div>'
                     ENDDIV o
                 ENDDIV o
             ENDDIV o

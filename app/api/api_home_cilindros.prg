@@ -12,8 +12,7 @@ function api_home_cilindros( oDom )
         case oDom:GetProc() == 'nav_end'									; DoNav_End( oDom )
         case oDom:GetProc() == 'sincronizar'								; DoSincronizar( oDom )
         case oDom:GetProc() == 'filtrar_movimiento'						    ; DoFiltrarMovimiento( oDom )
-        case oDom:GetProc() == 'seleccionar_cilindro'          				    ; DoSeleccionar_Cilindro(oDom)
-
+        case oDom:GetProc() == 'agregar_cilindro'          				    ; DoAgregar_Cilindro(oDom)
             otherwise 				
             oDom:SetError( "Proc don't defined => " + oDom:GetProc())
     endcase
@@ -221,7 +220,7 @@ static function LoadRows( oDom, hInfo, lInitBrw )
     // Construir SQL con LIMIT, OFFSET y WHERE para filtros
     cSql := "SELECT t1.row_id, t1.docto, t1.fecha, t1.codcli, t2.nombre_tercero " + ;
         "FROM m_docto_header t1 " + ;
-        "LEFT JOIN m_terceros t2 ON t1.codcli = t2.codcli "
+        "LEFT JOIN m_terceros t2 ON t1.codcli = t2.codcli"
 
     if !empty(cWhere)
         cSql += " WHERE " + cWhere
@@ -505,13 +504,86 @@ return oDom:Send()
 // -------------------------------------------------- //
 
 
-static function DoSeleccionar_Cilindro(oDom)
+static function DoAgregar_Cilindro(oDom)
     local cCodCil := AllTrim(oDom:Get('cNuevoCilindro'))
     local oQry, hFull
     local hInfo := InitInfo(oDom)
     local lConnected := .f.
+    local aCilindros := {}
+    local hCilindro := {=>}
+    local cCilindrosJson
+    local lExists := .F.
+    local h, aRow := {}
 
-    oDom:Set('cInfoCliente', "")
 
+    // validar código de cilindro
+    if hb_isNil(cCodCil) .or. empty(cCodCil)
+        oDom:Set('cNuevoCilindro', "")
+        oDom:SetAlert("Debe ingresar el código del cilindro.")
+        oDom:focus('cNuevoCilindro')
+        return nil
+    endif
+
+    // Abrir conexión a la base de datos
+    lConnected := OpenConnect(oDom, hInfo)
+    if !lConnected
+        oDom:SetError("No se pudo conectar a la base de datos.")
+        return nil
+    endif
+
+    // consultar cilindro
+    oQry := hInfo['db']:Query("SELECT * FROM tbcilindros WHERE cil_codigo = '" + cCodCil + "'")
+    if oQry == NIL .or. oQry:reccount() == 0
+        oDom:SetAlert("No se encontró el cilindro con código: " + cCodCil, "Error")
+        oDom:Set('cNuevoCilindro', "")
+        oDom:focus('cNuevoCilindro')
+        CloseConnect(oDom, hInfo)
+        return nil
+    endif
+
+    hFull := oQry:FillHRow()
+
+    // Construir el hash del cilindro (ajusta los campos según tus columnas)
+    hCilindro['CODIGO']  := hFull['cil_codigo']
+    hCilindro['CANTIDAD']:= 1
+
+    // Obtener los cilindros actuales de la tabla desde el campo oculto JSON
+    cCilindrosJson := oDom:Get('cilindros_json')
+    if !empty(cCilindrosJson)
+        oDom:console("Cilindros JSON: " + cCilindrosJson)
+        aCilindros := hb_jsonDecode(cCilindrosJson)
+
+    else
+        oDom:console("No hay cilindros actuales, inicializando array vacío.")
+        aCilindros := {}
+    endif
+
+    // Verificar duplicado: si ya existe un cilindro con el mismo código, mostrar alerta y no agregar
+    if ValType(aCilindros) $ 'A'
+
+        for each h in aCilindros
+            if !hb_isNil(h['CODIGO']) .and. AllTrim(Upper(h['CODIGO'])) == AllTrim(Upper(hCilindro['CODIGO']))
+                lExists := .T.
+                exit
+            endif
+        next
+        if lExists
+            // cerrar conexion antes de retornar
+            oDom:SetAlert("El cilindro con código " + AllTrim(hCilindro['CODIGO']) + " ya está registrado.")
+            oDom:Set('cNuevoCilindro', "")
+            oDom:focus('cNuevoCilindro')
+            CloseConnect(oDom, hInfo)
+            return nil
+        endif
+    endif
+
+    AAdd(aCilindros, hCilindro)
+
+    // Actualizar la tabla de cilindros
+    oDom:TableSetData('cilindros', aCilindros)
+
+    oDom:Set('cNuevoCilindro', "")
+
+    CloseConnect(oDom, hInfo)
 
 return nil

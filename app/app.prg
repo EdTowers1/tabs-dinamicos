@@ -111,17 +111,6 @@ function ShowInfo( hInfo )
 	Console  'Trace...........: ' + if( hInfo[ 'debug' ], 'Yes', 'No' )
 	Console  'Codepage........: ' + hb_SetCodePage() + '/' + hb_cdpUniID( hb_SetCodePage() )
 	Console  'UTF8 (actived)..: ' + if( hInfo[ 'utf8' ], 'Yes', 'No' )
-	/*IF ! hInfo[ 'db' ]
-		//Console 'Connection OK '
-		Console 'Host............: ' + oConnection:cHost
-		Console 'Database........: ' + oConnection:cDBName
-		Console 'Version Mysql.3..: '  + oConnection:GetServerInfo()
-		//Console 'Version MariadbC:'  + oConnection:GetClientInfo()
-		//Console 'Cuantas Cuentas :'  + Alltrim(Str(adatos[1]))
-		//Console 'Json........... :'  + Hb_jsonEncode(adatos[2])
-		oConnection:End()
-	ENDIF
-	*/
 	Console  Replicate( '-', len( cLang ) )
 	Console  cLang
 	Console  Replicate( '-', len( cLang ) )
@@ -133,7 +122,7 @@ retu nil
 
 function Config()
 
-   	REQUEST HB_LANG_ES
+  REQUEST HB_LANG_ES
 	REQUEST HB_CODEPAGE_ESMWIN
 
     SET Deleted  ON
@@ -181,7 +170,6 @@ function Conect_database(oDom,hInfo)
     IF  hParms['lerror']
         hInfo['lerror']         :=  .t.
         hInfo['lerrordetalle']  :=  hParms['lerrordetalle']
-		//? hb_dumpvar( hInfo['lerrordetalle'] )
         return nil
     endif
 
@@ -199,9 +187,6 @@ function Conect_database(oDom,hInfo)
 	CATCH oErr
             hInfo['lerror']         :=  .t.
             hInfo['lerrordetalle']  :=  "No pudo conectar al servidor Sql  "  //+ hb_dumpvar( oErr )
-
-//? hb_dumpvar( oErr )
-
 	END
 
 RETURN NIL

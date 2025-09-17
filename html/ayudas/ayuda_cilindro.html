@@ -5,8 +5,7 @@ LOCAL o, oDlg, oBrw, aOptions, aColumnas, aEvents, aData
 
 // Definir las columnas de la tabla
 aColumnas := { ;
-    { 'title' => "Código del Cilindro", 'field' => "CODCLI", 'width' => 120, 'resizable' => .f., 'headerSort' => .f.}, ;
-    { 'title' => "Nombre", 'field' => "NOMCLI", 'width' => 320, 'resizable' => .f., 'headerSort' => .f.} ;
+    { 'title' => "Código", 'field' => "CODCIL", 'width' => 120, 'resizable' => .f., 'headerSort' => .f.} ;
 }
 
 // Opciones para el browse
@@ -18,20 +17,19 @@ aOptions := { ;
 
 // eventos para la tabla
 aEvents := { ;
-	{ 'name' => 'tableBuilt' , 'proc' => 'exe_consulta' }, ;
-	{ 'name' => 'rowClick' , 'proc' => 'seleccionar_cliente' } ;
+	{ 'name' => 'tableBuilt' , 'proc' => 'exe_consulta' } ;
 }
 
 DEFINE DIALOG oDlg
 
-    DEFINE FORM o ID 'dlg_cilindros' OF oDlg
+    DEFINE FORM o ID 'dlg_cilindros' API 'api_cilindros' OF oDlg
     
     INIT FORM o 	
 
         ROW o
             COL o GRID 12
                 // Usar el componente de tabla
-                HTML o FILE 'components/tabla_browse.html' PARAMS o, 'clientes', aColumnas, aData, aEvents, aOptions
+                HTML o FILE 'components/tabla_browse.html' PARAMS o, 'cilindros', aColumnas, aData, aEvents, aOptions
             ENDCOL o
         ENDROW o
 

@@ -17,7 +17,7 @@ local bColumnas := { ;
     { 'title' => "Precio", 'field' => "PRECIO", 'widthGrow' => 1 }, ;
     {'title' => "editar", 'field' => "EDITAR", 'widthGrow' => 1, 'hozAlign' => 'right', 'headerSort' => .F., 'formatter' => 'editbutton'},;
     {'title' => "borrar", 'field' => "BORRAR", 'widthGrow' => 1, 'hozAlign' => 'right', 'headerSort' => .F., 'formatter' => 'deletebutton'} ;
-}
+    }
 
 
 local aOptions := { ;
@@ -45,9 +45,9 @@ local aEvents := { ;
 
 
 local aBotonesHeader := { ;
-{ 'id' => 'btn_save_header', 'action' => 'guardar', 'class' => 'btn-primary', 'icon' => 'fas fa-save', 'label' => 'Guardar' }, ;
-	{ 'id' => 'btn_cancel_header', 'link' => 'recepcion', 'class' => 'btn-secondary', 'icon' => 'fas fa-times', 'label' => 'Cancelar' } ;
-}
+    { 'id' => 'btn_save_header', 'action' => 'guardar', 'class' => 'btn-primary', 'icon' => 'fas fa-save', 'label' => 'Guardar' }, ;
+    { 'id' => 'btn_cancel_header', 'link' => 'recepcion', 'class' => 'btn-secondary', 'icon' => 'fas fa-times', 'label' => 'Cancelar' } ;
+    }
 
 
 
@@ -74,10 +74,10 @@ ENDDIV o
 
 ROWGROUP o
 GET ID 'cFiltroMovimiento' VALUE '' ;
-	PLACEHOLDER	 'Ingrese el nombre del cliente o # de documento...' ;
-	BUTTON '<i class="fas fa-search"></i>' ;
-	ACTION 'filtrar_movimiento' ;
-	GRID 12 OF o
+    PLACEHOLDER	 'Ingrese el nombre del cliente o # de documento...' ;
+    BUTTON '<i class="fas fa-search"></i>' ;
+    ACTION 'filtrar_movimiento' ;
+    GRID 12 OF o
 ENDROW o
 
 
@@ -140,10 +140,15 @@ HTML o FILE 'components/tabla_browse.html' PARAMS o, 'cilindros', bColumnas, bDa
 
 ROWGROUP o CLASS 'mt-2'
 GET ID 'cNuevoCilindro' VALUE '' ;
-	BUTTON '<i class="fas fa-plus"></i>' ;
-	ACTION 'ayuda_cilindro' ;
-	GRID 6 OF o
+    VALID 'agregar_cilindro' ;
+    PLACEHOLDER 'Ingrese el código del cilindro...' ;
+    BUTTON '<i class="fas fa-search"></i>' ;
+    ACTION 'ayuda_cilindro' ;
+    GRID 6 OF o
 ENDROW o
+
+// Campo oculto para mantener el array de cilindros como JSON
+GET ID 'cilindros_json' VALUE '' HIDDEN OF o
 
 ENDDIV o
 ENDDIV o
@@ -154,58 +159,78 @@ ENDFORM o
 
 HTML o 
 <script>
-// Formatter editbutton debe estar en el scope global
-var editbutton = function(cell, formatterParams){
-    return '<i class="fas fa-pencil-alt" style="color:blue;"></i>';
-}
+    // Formateadores globales (Tabulator los busca por nombre)
+    function editbutton() { return '<i class="fas fa-pencil-alt" style="color:blue;"></i>'; }
+    function deletebutton() { return '<i class="fas fa-trash-alt" style="color:red;"></i>'; }
 
-var deletebutton = function(cell, formatterParams){
-    return '<i class="fas fa-trash-alt" style="color:red;"></i>';
-}
+    // Obtener tabla por sufijo (movimientos / cilindros)
+    function getTable(suffix) {
+        var t = Tabulator.findTable('#home_cilindros-' + suffix);
+        return (t && t.length) ? t[0] : null;
+    }
 
-$(document).ready(function () {
-    var table = Tabulator.findTable("#home_cilindros-movimientos")[0];
-    var cilindrosTable = Tabulator.findTable("#home_cilindros-cilindros")[0];
+    // Actualiza el campo oculto con el JSON actual de cilindros
+    function setCilindrosJson(data) {
+        var json = JSON.stringify(data || []);
+        var $el = $("[id$='cilindros_json'], [name='cilindros_json']").first();
+        if ($el.length) {
+            $el.val(json);
+            console.log('Actualizado cilindros_json, elementos encontrados:', $el.length);
+        } else {
+            console.warn('Input cilindros_json no encontrado en el DOM.');
+        }
+    }
 
-    if (table) {
-        table.on("tableBuilt", function () {
-            // Esperar a que los datos se carguen completamente
-            setTimeout(function () {
-                var rows = table.getRows();
-                if (rows.length > 0) {
-                    rows[0].select();
-                    rows[0].getElement().dispatchEvent(new Event("click"));
+    // Enviar petición para agregar un cilindro (incluye datos actuales de la tabla)
+    function sendAddCilindro() {
+        var $input = $("[id$='cNuevoCilindro']").first();
+        if (!$input.length) { console.warn('Input cNuevoCilindro no encontrado'); return; }
+        var cVal = $input.val() || '';
+        if (!cVal) { console.warn('cNuevoCilindro vacío'); return; }
+        var t = getTable('cilindros');
+        var cilindrosData = t ? t.getData() : [];
+        var params = { cNuevoCilindro: cVal, cilindros_json: JSON.stringify(cilindrosData) };
+        try { MsgApi('api_home_cilindros', 'agregar_cilindro', params, 'home_cilindros'); }
+        catch (e) { console.error('Error llamando MsgApi', e); }
+    }
 
-                    // Llamar al procedimiento de la API definido en aEvents
+    // Inicialización de bindings
+    $(function () {
+        var movimientos = getTable('movimientos');
+        var cilindros = getTable('cilindros');
+
+        if (movimientos) {
+            movimientos.on('tableBuilt', function () {
+                setTimeout(function () {
+                    var rows = movimientos.getRows();
+                    if (!rows.length) return;
                     try {
-                        var $dlg = $('#' + table.element.id).parents('[data-dialog]');
+                        rows[0].select();
+                        rows[0].getElement().dispatchEvent(new Event('click'));
+                        var $dlg = $('#' + movimientos.element.id).parents('[data-dialog]');
                         var id_parent = $dlg.length ? $dlg.attr('id') : null;
                         var cApi = id_parent ? $('#' + id_parent).data('api') : null;
                         if (cApi && id_parent) {
-                            var oPar = { 'row': rows[0].getData() };
-                            MsgApi(cApi, 'sincronizar', oPar, id_parent);
+                            MsgApi(cApi, 'sincronizar', { row: rows[0].getData() }, id_parent);
                         } else {
                             console.warn('No se encontró api/dialog padre para enviar evento rowClick');
                         }
-                    } catch (e) {
-                        console.error('Error enviando evento a la API:', e);
-                    }
-                }
-            }, 300);
-        });
-    }
+                    } catch (e) { console.error('Error enviando evento a la API:', e); }
+                }, 300);
+            });
+        }
 
-    // Inicializar tabla de cilindros con datos vacíos
-    if (cilindrosTable) {
-        cilindrosTable.on("tableBuilt", function () {
-            // La tabla de cilindros se llenará cuando se seleccione un movimiento
-            console.log('Tabla de cilindros inicializada');
-        });
-    }
-});
+        if (cilindros) {
+            cilindros.on('tableBuilt', function () { try { setCilindrosJson(cilindros.getData()); } catch (e) { console.warn('No se pudo obtener datos en tableBuilt', e); } });
+            cilindros.on('dataChanged', function (data) { setCilindrosJson(data); });
+        }
+
+        // Enter -> enviar nuevo cilindro
+        $(document).on('keydown', "[id$='cNuevoCilindro']", function (e) { if (e.key === 'Enter') { e.preventDefault(); sendAddCilindro(); } });
+    });
 </script>
-ENDTEXT
+    ENDTEXT
 
-INIT DIALOG oWeb RETURN
+    INIT DIALOG oWeb RETURN
 
-?>
+    ?>
