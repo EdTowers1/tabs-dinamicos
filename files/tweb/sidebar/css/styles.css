@@ -241,8 +241,8 @@ nav.navbar .navbar-toggler-icon {
   overflow: hidden;
 }
 
-.tab-content {
-border: solid 1px ;
+.tablist{
+  margin-top: 5px;
 }
 
 .tab-close {

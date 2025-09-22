@@ -49,10 +49,10 @@ DEFINE WEB oWeb TITLE 'Sistema de Gestión de Cilindros'
 								var tabList = document.getElementById('tabList');
 								var tabContent = document.getElementById('tabContent');
 
-								console.log('Elementos detectados:', {
-									tabList: tabList,
-									tabContent: tabContent
-								});
+								// console.log('Elementos detectados:', {
+								// 	tabList: tabList,
+								// 	tabContent: tabContent
+								// });
 
 								function activarTab(btn) {
 									if (!btn) return;
@@ -67,7 +67,7 @@ DEFINE WEB oWeb TITLE 'Sistema de Gestión de Cilindros'
 
 								// Crear una pestaña recuperando HTML mediante fetch y mostrando el fragmento directamente
 								window.addFetchedTab = function (url, customId, title, makeActive) {
-									console.log("Creando pestaña con fetch para URL:", url);
+									// console.log("Creando pestaña con fetch para URL:", url);
 									tabCounter++; var idx = tabCounter;
 									var tabId = customId || ('tab-fet-' + idx);
 									// Asignar color a la pestaña usando el array colors (ciclo)
@@ -169,7 +169,7 @@ DEFINE WEB oWeb TITLE 'Sistema de Gestión de Cilindros'
 
 								// Función para abrir módulos desde el sidebar
 								window.openTabFromSidebar = function (modulo, titulo) {
-									console.log("Abriendo tab desde sidebar:", modulo, titulo);
+									// console.log("Abriendo tab desde sidebar:", modulo, titulo);
 
 									// Verificar si ya existe una pestaña con este ID
 									var tabId = modulo + '-tab';
@@ -177,18 +177,18 @@ DEFINE WEB oWeb TITLE 'Sistema de Gestión de Cilindros'
 
 									if (existingTab) {
 										// Si la pestaña ya existe, solo la activamos
-										console.log("La pestaña ya existe, activándola...");
+										// console.log("La pestaña ya existe, activándola...");
 										activarTab(existingTab);
 										return;
 									}
 
 									// Si no existe, creamos una nueva pestaña cargando el contenido por fetch
-									console.log("Creando nueva pestaña para", modulo);
+									// console.log("Creando nueva pestaña para", modulo);
 
 									// Construir la URL para el fetch apuntando a la ruta pública registrada en el servidor
 									// (el servidor tiene: oServer:Route( 'recepcion', 'recepcion' ) )
 									var url = modulo;
-									console.log("URL del servidor:", url);
+									// console.log("URL del servidor:", url);
 
 									// Usar la función addFetchedTab para insertar fragmentos (sin iframe)
 									addFetchedTab(url, tabId, titulo, true);
@@ -210,7 +210,7 @@ DEFINE WEB oWeb TITLE 'Sistema de Gestión de Cilindros'
 
 									if (existingTab) {
 										// Si la pestaña ya existe, solo la activamos
-										console.log("La pestaña de vista ya existe, activándola...");
+										// console.log("La pestaña de vista ya existe, activándola...");
 										activarTab(existingTab);
 										return;
 									}

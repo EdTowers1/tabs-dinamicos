@@ -3,165 +3,191 @@
 
 local o, oWeb, cId, aData, bData, cAccionesHtml
 
-// data de pruebas
-
+// Data de pruebas
 local aColumnas := { ;
     { 'title' => "# Documento", 'field' => "DOCTO", 'widthGrow' => 1 }, ;
     { 'title' => "Fecha", 'field' => "FECHA", 'widthGrow' => 1 }, ;
-    { 'title' => "Cliente", 'field' => "NOMCLI", 'widthGrow' => 2 };
-    }
+    { 'title' => "Cliente", 'field' => "NOMCLI", 'widthGrow' => 2 } ;
+}
 
 local bColumnas := { ;
     { 'title' => "Código", 'field' => "CODIGO", 'widthGrow' => 1 }, ;
     { 'title' => "Cantidad", 'field' => "CANTIDAD", 'widthGrow' => 1 }, ;
     { 'title' => "Precio", 'field' => "PRECIO", 'widthGrow' => 1 }, ;
-    {'title' => "editar", 'field' => "EDITAR", 'widthGrow' => 1, 'hozAlign' => 'right', 'headerSort' => .F., 'formatter' => 'editbutton'},;
-    {'title' => "borrar", 'field' => "BORRAR", 'widthGrow' => 1, 'hozAlign' => 'right', 'headerSort' => .F., 'formatter' => 'deletebutton'} ;
-    }
-
+    { 'title' => "Editar", 'field' => "EDITAR", 'widthGrow' => 1, 'hozAlign' => 'right', 'headerSort' => .F., 'formatter' => 'editbutton' }, ;
+    { 'title' => "Borrar", 'field' => "BORRAR", 'widthGrow' => 1, 'hozAlign' => 'right', 'headerSort' => .F., 'formatter' => 'deletebutton' } ;
+}
 
 local aOptions := { ;
     'index' => 'ROW_ID', ;
-    'selectable' => .T., ;
-    'selectableRollingSelection' => .T., ;
-    'selectableRangeMode' => "click", ;
-    'movableColumns' => .F. ;
-    }
-
-local bOptions := { ;
-    'index' => 'ROW_ID', ;
-    'height' => '250px', ;
+    'height' => '408px', ;
     'layout' => 'fitColumns', ;
     'selectable' => .T., ;
     'selectableRollingSelection' => .T., ;
     'selectableRangeMode' => "click", ;
     'movableColumns' => .F. ;
-    }
+}
+
+local bOptions := { ;
+    'index' => 'ROW_ID', ;
+    'height' => '200px', ;
+    'layout' => 'fitColumns', ;
+    'selectable' => .T., ;
+    'selectableRollingSelection' => .T., ;
+    'selectableRangeMode' => "click", ;
+    'movableColumns' => .F. ;
+}
 
 local aEvents := { ;
-    { 'name' => 'tableBuilt' , 'proc' => 'exe_consulta' }, ;
-    { 'name' => 'rowClick' , 'proc' => 'sincronizar' } ;
-    }
-
+    { 'name' => 'tableBuilt', 'proc' => 'exe_consulta' }, ;
+    { 'name' => 'rowClick', 'proc' => 'sincronizar' } ;
+}
 
 local aBotonesHeader := { ;
     { 'id' => 'btn_save_header', 'action' => 'guardar', 'class' => 'btn-primary', 'icon' => 'fas fa-save', 'label' => 'Guardar' }, ;
     { 'id' => 'btn_cancel_header', 'link' => 'recepcion', 'class' => 'btn-secondary', 'icon' => 'fas fa-times', 'label' => 'Cancelar' } ;
-    }
+}
 
-
-
-DEFINE DIALOG oWeb 
+DEFINE DIALOG oWeb
 
 DEFINE FORM o ID 'home_cilindros' API 'api_home_cilindros' OF oWeb
-o:lFluid := .t.
-INIT FORM o
+    o:lFluid := .t.
+    //o:ldessign := .t.
+    INIT FORM o
 
-DIV o CLASS 'row h-100'
+                
+        div o class 'row h-100'
 
-DIV o CLASS 'col-12 col-md-3 left-pane'
+        
 
-DIV o ID 'example-table' STYLE 'box-shadow: 5px 2px 8px rgba(0,0,0,0.35); margin: 5px; padding: 5px; border-radius: 4px;'
+                            div o class 'col-12 col-md-4 left-pane' style 'padding:5px;'
+                              div o class 'mb-1 mt-1' style 'box-shadow: 0 0 8px rgba(0,0,0,0.35); padding:0.75rem; border-radius:8px;'
+                    div o class 'row align-items-center justify-content-start pb-2'
+                        col o grid 12
+                                div o class 'm-1'
+                                BUTTON ID 'btn_add'  ICON '<div style="display:flex;flex-direction:column;align-items:center;"><i class="fas fa-plus text-primary" style="font-size:16px;"></i><span style="font-size:9px;color:#6c757d;margin-top:3px;">Adicionar</span></div>' ACTION 'nuevocilindro' GRID 0 CLASS 'border-0' STYLE 'margin-right:4px;border:0;background:transparent;padding:2px 4px;' OF o
+                                BUTTON ID 'btn_edit'   ICON '<div style="display:flex;flex-direction:column;align-items:center;"><i class="fas fa-edit text-primary" style="font-size:16px;"></i><span style="font-size:9px;color:#6c757d;margin-top:3px;">Editar</span></div>' ACTION 'editar_cliente' GRID 0 CLASS 'border-0' STYLE 'margin-right:4px;border:0;background:transparent;padding:2px 4px;' OF o
+                                BUTTON ID 'btn_delete'   ICON '<div style="display:flex;flex-direction:column;align-items:center;"><i class="fas fa-trash text-primary" style="font-size:16px;"></i><span style="font-size:9px;color:#6c757d;margin-top:3px;">Borrar</span></div>' ACTION 'eliminar_cliente' GRID 0 CLASS 'border-0' STYLE 'margin-right:4px;border:0;background:transparent;padding:2px 4px;' OF o
+                                BUTTON ID 'btn_export'   ICON '<div style="display:flex;flex-direction:column;align-items:center;"><i class="fas fa-file-export text-primary" style="font-size:16px;"></i><span style="font-size:9px;color:#6c757d;margin-top:3px;">Exportar</span></div>' ACTION 'exportar_cliente' GRID 0 CLASS 'border-0' STYLE 'margin-right:4px;border:0;background:transparent;padding:2px 4px;' OF o
+                            enddiv o
 
+                            div o class 'mb-2'
+                                GET ID 'cFiltroMovimiento' VALUE '' ;
+                                PLACEHOLDER	 'Ingrese el nombre del cliente o # de documento...' ;
+                                BUTTON '<i class="fas fa-search"></i>' ;
+                                ACTION 'filtrar_movimiento' ;
+                                GRID 12 OF o
+                            enddiv o
+                            
+                            col o grid 12
+                            HTML o FILE 'components/tabla_browse.html' PARAMS o, 'movimientos', aColumnas, aData, aEvents, aOptions
+                            div o class 'mt-2'
+                            HTML o FILE 'components/barra_paginacion.html' PARAMS o, 'nav', 0
+                            enddiv o
+                            endcol o
+                        endcol o
+                    enddiv o
+                enddiv o
+            enddiv o
 
-DIV o STYLE 'margin-top:5px;'
-BUTTON ID 'btn_add'  ICON '<div style="display:flex;flex-direction:column;align-items:center;"><i class="fas fa-plus text-primary" style="font-size:16px;"></i><span style="font-size:9px;color:#6c757d;margin-top:3px;">Adicionar</span></div>' ACTION 'nuevocilindro' GRID 0 CLASS 'border-0' STYLE 'margin-right:4px;border:0;background:transparent;padding:2px 4px;' OF o
-BUTTON ID 'btn_edit'   ICON '<div style="display:flex;flex-direction:column;align-items:center;"><i class="fas fa-edit text-primary" style="font-size:16px;"></i><span style="font-size:9px;color:#6c757d;margin-top:3px;">Editar</span></div>' ACTION 'editar_cliente' GRID 0 CLASS 'border-0' STYLE 'margin-right:4px;border:0;background:transparent;padding:2px 4px;' OF o
-BUTTON ID 'btn_delete'   ICON '<div style="display:flex;flex-direction:column;align-items:center;"><i class="fas fa-trash text-primary" style="font-size:16px;"></i><span style="font-size:9px;color:#6c757d;margin-top:3px;">Borrar</span></div>' ACTION 'eliminar_cliente' GRID 0 CLASS 'border-0' STYLE 'margin-right:4px;border:0;background:transparent;padding:2px 4px;' OF o
-BUTTON ID 'btn_export'   ICON '<div style="display:flex;flex-direction:column;align-items:center;"><i class="fas fa-file-export text-primary" style="font-size:16px;"></i><span style="font-size:9px;color:#6c757d;margin-top:3px;">Exportar</span></div>' ACTION 'exportar_cliente' GRID 0 CLASS 'border-0' STYLE 'margin-right:4px;border:0;background:transparent;padding:2px 4px;' OF o
-ENDDIV o
+            div o class 'col-12 col-md-8 right-pane' style 'padding:5px'
+                div o class 'mb-1 mt-1' style 'box-shadow: 0 0 8px rgba(0,0,0,0.35); padding:0.75rem; border-radius:8px;'
+                    div o class 'row align-items-center justify-content-start pb-2'
+                        col o grid 6
+                            GET ID 'cCliente' GRID 12;
+                            VALUE '';
+                            PROMPT 'Cliente';
+                            VALID 'seleccionar_cliente';
+                            PLACEHOLDER 'Ingrese el código del cliente';
+                            BUTTON '<i class="fas fa-search"></i>';
+                            ACTION 'ayuda_cliente';
+                            HIDDEN ;
+                            OF o
 
+                            GET MEMO ID 'cInfoCliente' GRID 12;
+                            LABEL 'Información del cliente :';
+                            VALUE 'Debe seleccionar un cliente para ver su información';
+                            ROWS 4 STYLE 'resize: none; margin-top: 5px;';
+                            DISABLED;
+                            OF o
+                        endcol o
 
-ROWGROUP o
-GET ID 'cFiltroMovimiento' VALUE '' ;
-    PLACEHOLDER	 'Ingrese el nombre del cliente o # de documento...' ;
-    BUTTON '<i class="fas fa-search"></i>' ;
-    ACTION 'filtrar_movimiento' ;
-    GRID 12 OF o
-ENDROW o
+                        col o grid 6
 
+                            GET ID 'cOrden'  GRID 12;
+                            LABEL 'Orden # :';
+                            PLACEHOLDER 'Número de orden';
+                            DISABLED;
+                            OF o
 
-// Usar el componente de tabla
-HTML o FILE 'components/tabla_browse.html' PARAMS o, 'movimientos', aColumnas, aData, aEvents, aOptions
-HTML o FILE 'components/barra_paginacion.html' PARAMS o, 'nav', 0
-ENDDIV o
-ENDDIV o
+                            GET ID 'cFecha'   GRID 12;
+                            VALUE '';
+                            LABEL 'Fecha :';
+                            TYPE 'date';
+                            DISABLED;
+                            OF o
 
-DIV o CLASS 'col-12 col-md-9 p-2 right-pane'
+                            SELECT oSelect ID 'cTipo' GRID 12;
+                            PROMPT 'LLenado', 'Reparación', 'Traslado';
+                            VALUES 'L', 'R', 'T';
+                            LABEL 'Tipo :';
+                            OF o
+                        endcol o
+                    enddiv o
+                enddiv o
 
-HTML o FILE 'components/header_titulo_botones.html' PARAMS o, 'Ingreso de Cilindros', 'fas fa-wrench',
-
-DIV o STYLE 'box-shadow: 5px 2px 8px rgba(0,0,0,0.35); margin: 5px; padding: 5px; border-radius: 4px;'
-ROW o CLASS 'gx-3'
-COL o GRID 6
-ROWGROUP o
-GET ID 'cCliente' GRID 12;
-    VALUE '';
-    PROMPT 'Cliente';
-    VALID 'seleccionar_cliente';
-    PLACEHOLDER 'Ingrese el código del cliente';
-    BUTTON '<i class="fas fa-search"></i>';
-    ACTION 'ayuda_cliente';
-    OF o
-GET MEMO ID 'cInfoCliente' GRID 12;
-    VALUE 'Debe seleccionar un cliente para ver su información';
-    ROWS 4 STYLE 'resize: none; margin-top: 5px;';
-    DISABLED;
-    OF o
-ENDROW o
-ENDCOL o
-
-COL o GRID 6
-ROWGROUP o
-GET ID 'cOrden'  GRID 12;
-    LABEL 'Orden # :';
-    PLACEHOLDER 'Número de orden';
-    DISABLED;
-    OF o
-GET ID 'cFecha'   GRID 12;
-    VALUE '';
-    LABEL 'Fecha :';
-    TYPE 'date';
-    DISABLED;
-    OF o
-SELECT oSelect ID 'cTipo' GRID 12;
-    PROMPT 'LLenado', 'Reparación', 'Traslado';
-    VALUES 'L', 'R', 'T';
-    LABEL 'Tipo :';
-    OF o
-ENDROW o
-ENDCOL o
-ENDROW o
-ENDDIV o
-
-DIV o STYLE 'box-shadow: 5px 2px 8px rgba(0,0,0,0.35); margin: 5px; padding: 5px; border-radius: 4px;'
-// tabla sencilla: datos de prueba de cilindros
-HTML o FILE 'components/tabla_browse.html' PARAMS o, 'cilindros', bColumnas, bData, bOptions
-
-ROWGROUP o CLASS 'mt-2'
-GET ID 'cNuevoCilindro' VALUE '' ;
-    VALID 'agregar_cilindro' ;
-    PLACEHOLDER 'Ingrese el código del cilindro...' ;
-    BUTTON '<i class="fas fa-search"></i>' ;
-    ACTION 'ayuda_cilindro' ;
-    GRID 6 OF o
-ENDROW o
-
-// Campo oculto para mantener el array de cilindros como JSON
-GET ID 'cilindros_json' VALUE '' HIDDEN OF o
-
-ENDDIV o
-ENDDIV o
-
-ENDDIV o
-ENDFORM o	
+                div o class 'mb-1 mt-1' style 'box-shadow: 0 0 8px rgba(0,0,0,0.35); padding:0.75rem; border-radius:8px;'
+                    div o class 'm-3'
+                        HTML o FILE 'components/tabla_browse.html' PARAMS o, 'cilindros', bColumnas, bData, bOptions
 
 
-HTML o 
+
+html o
+
+    <div class="row g-2 align-items-center">
+      <!-- Input: ancho fijo 4 columnas -->
+      <div class="col-6">
+        <input type="text" class="form-control" placeholder="Escribe aquí..." data-live data-onchange="agregar_cilindro" id="home_cilindros-cNuevoCilindro" name="home_cilindros-cNuevoCilindro" hidden>
+      </div>
+
+      <!-- Espacio flexible que empuja los botones a la derecha -->
+      <div class="col"></div>
+
+      <!-- Botones agrupados y alineados al final -->
+      <div class="col-auto">
+        <div class="d-flex gap-2">
+          <button class="btn btn-primary m-1" id="home_cilindros-cGuardar" hidden>Guardar</button>
+          <button class="btn btn-primary m-1" id="home_cilindros-cCancelar" hidden>Cancelar</button>
+        </div>
+      </div>
+    </div>
+
+endtext
+                    enddiv o
+                enddiv o
+            enddiv o
+
+
+
+            GET ID 'cilindros_json' VALUE '' HIDDEN OF o
+    ENDFORM o
+
+    HTML o
+
+
 <script>
     // Formateadores globales (Tabulator los busca por nombre)
-    function editbutton() { return '<i class="fas fa-pencil-alt" style="color:blue;"></i>'; }
-    function deletebutton() { return '<i class="fas fa-trash-alt" style="color:red;"></i>'; }
+    function editbutton(cell, formatterParams, onRendered) {
+        // Mostrar solo en modo edición
+        if (!window.editingActive) return '';
+        return '<i class="fas fa-pencil-alt" style="color:blue;"></i>';
+    }
+
+    function deletebutton(cell, formatterParams, onRendered) {
+        // Mostrar solo en modo edición
+        if (!window.editingActive) return '';
+        return '<i class="fas fa-trash-alt" style="color:red;"></i>';
+    }
 
     // Obtener tabla por sufijo (movimientos / cilindros)
     function getTable(suffix) {
@@ -175,7 +201,6 @@ HTML o
         var $el = $("[id$='cilindros_json'], [name='cilindros_json']").first();
         if ($el.length) {
             $el.val(json);
-            console.log('Actualizado cilindros_json, elementos encontrados:', $el.length);
         } else {
             console.warn('Input cilindros_json no encontrado en el DOM.');
         }
@@ -184,24 +209,38 @@ HTML o
     // Enviar petición para agregar un cilindro (incluye datos actuales de la tabla)
     function sendAddCilindro() {
         var $input = $("[id$='cNuevoCilindro']").first();
-        if (!$input.length) { console.warn('Input cNuevoCilindro no encontrado'); return; }
+        if (!$input.length) {
+            console.warn('Input cNuevoCilindro no encontrado');
+            return;
+        }
         var cVal = $input.val() || '';
-        if (!cVal) { console.warn('cNuevoCilindro vacío'); return; }
+        if (!cVal) {
+            console.warn('cNuevoCilindro vacío');
+            return;
+        }
         var t = getTable('cilindros');
         var cilindrosData = t ? t.getData() : [];
-        var params = { cNuevoCilindro: cVal, cilindros_json: JSON.stringify(cilindrosData) };
-        try { MsgApi('api_home_cilindros', 'agregar_cilindro', params, 'home_cilindros'); }
-        catch (e) { console.error('Error llamando MsgApi', e); }
+        var params = {
+            cNuevoCilindro: cVal,
+            cilindros_json: JSON.stringify(cilindrosData)
+        };
+        try {
+            MsgApi('api_home_cilindros', 'agregar_cilindro', params, 'home_cilindros');
+        } catch (e) {
+            console.error('Error llamando MsgApi', e);
+        }
     }
 
     // Inicialización de bindings
-    $(function () {
+    $(function() {
         var movimientos = getTable('movimientos');
         var cilindros = getTable('cilindros');
+        // bandera que indica si estamos en modo edición activado por el botón Editar
+        window.editingActive = false;
 
         if (movimientos) {
-            movimientos.on('tableBuilt', function () {
-                setTimeout(function () {
+            movimientos.on('tableBuilt', function() {
+                setTimeout(function() {
                     var rows = movimientos.getRows();
                     if (!rows.length) return;
                     try {
@@ -211,26 +250,122 @@ HTML o
                         var id_parent = $dlg.length ? $dlg.attr('id') : null;
                         var cApi = id_parent ? $('#' + id_parent).data('api') : null;
                         if (cApi && id_parent) {
-                            MsgApi(cApi, 'sincronizar', { row: rows[0].getData() }, id_parent);
+                            MsgApi(cApi, 'sincronizar', {
+                                row: rows[0].getData()
+                            }, id_parent);
                         } else {
-                            console.warn('No se encontró api/dialog padre para enviar evento rowClick');
+                            console.warn(
+                                'No se encontró api/dialog padre para enviar evento rowClick'
+                            );
                         }
-                    } catch (e) { console.error('Error enviando evento a la API:', e); }
+                    } catch (e) {
+                        console.error('Error enviando evento a la API:', e);
+                    }
                 }, 300);
             });
         }
 
         if (cilindros) {
-            cilindros.on('tableBuilt', function () { try { setCilindrosJson(cilindros.getData()); } catch (e) { console.warn('No se pudo obtener datos en tableBuilt', e); } });
-            cilindros.on('dataChanged', function (data) { setCilindrosJson(data); });
+            cilindros.on('tableBuilt', function() {
+                try {
+                    setCilindrosJson(cilindros.getData());
+                } catch (e) {
+                    console.warn('No se pudo obtener datos en tableBuilt', e);
+                }
+            });
+            cilindros.on('dataChanged', function(data) {
+                setCilindrosJson(data);
+            });
         }
 
         // Enter -> enviar nuevo cilindro
-        $(document).on('keydown', "[id$='cNuevoCilindro']", function (e) { if (e.key === 'Enter') { e.preventDefault(); sendAddCilindro(); } });
+        $(document).on('keydown', "[id$='cNuevoCilindro']", function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                sendAddCilindro();
+            }
+        });
+
+        // Ajustar tamaño de tablas al cambiar ventana - Basado en el ejemplo de referencia
+        window.addEventListener("resize", function() {
+            if (movimientos) movimientos.redraw(true);
+            if (cilindros) cilindros.redraw(true);
+        });
+
+        // Mostrar campos ocultos al hacer click en editar cuando hay fila seleccionada
+        $(document).on('click', "[id$='btn_edit']", function(e) {
+            e.preventDefault();
+            var mov = getTable('movimientos');
+            if (!mov) {
+                alert('Tabla de movimientos no encontrada');
+                return;
+            }
+            var selected = mov.getSelectedRows();
+            if (!selected || !selected.length) {
+                alert('Seleccione un registro de movimientos antes de editar.');
+                return;
+            }
+
+            var $cCli = $("[id$='cCliente']").first();
+            var $cNew = $("[id$='cNuevoCilindro']").first();
+            // select possible button IDs used by TWeb or our manual buttons
+            var $btnSave = $("[id$='cGuardar'], #home_cilindros-cGuardar, [id$='btn_guardar']").first();
+            var $btnCancel = $("[id$='cCancelar'], #home_cilindros-cCancelar, [id$='btn_cancelar']").first();
+            // activar modo edición
+            window.editingActive = true;
+            [$cCli, $cNew].forEach(function($el) {
+                if (!$el || !$el.length) return;
+                $el.removeAttr('hidden').css('display', 'block');
+                var id = $el.attr('id');
+                if (id) {
+                    $("label[for='" + id + "']").show();
+                }
+                $el.closest('[class*="col"]').show();
+            });
+            // mostrar botones de acción (si existen)
+            if ($btnSave && $btnSave.length) $btnSave.removeAttr('hidden').css('display', 'inline-block');
+            if ($btnCancel && $btnCancel.length) $btnCancel.removeAttr('hidden').css('display', 'inline-block');
+            // forzar redraw de la tabla de cilindros para que los formatters se actualicen
+            if (cilindros) try {
+                cilindros.redraw(true);
+            } catch (e) {}
+        });
+
+        // Si se cambia la selección en la tabla de movimientos, desactivar el modo edición
+        if (movimientos) {
+            try {
+                movimientos.on('rowSelectionChanged', function(data, rows) {
+                    // si está activo el modo edición, lo desactivamos y ocultamos los campos
+                    if (window.editingActive) {
+                        window.editingActive = false;
+                        var $cCli = $("[id$='cCliente']").first();
+                        var $cNew = $("[id$='cNuevoCilindro']").first();
+                        [$cCli, $cNew].forEach(function($el) {
+                            if (!$el || !$el.length) return;
+                            $el.attr('hidden', 'hidden').css('display', 'none');
+                            var id = $el.attr('id');
+                            if (id) {
+                                $("label[for='" + id + "']").hide();
+                            }
+                            $el.closest('[class*="col"]').hide();
+                        });
+                        // ocultar botones de acción si existen
+                        var $btnSave = $("[id$='cGuardar'], #home_cilindros-cGuardar, [id$='btn_guardar']");
+                        var $btnCancel = $("[id$='cCancelar'], #home_cilindros-cCancelar, [id$='btn_cancelar']");
+                        $btnSave.attr('hidden', 'hidden').css('display', 'none');
+                        $btnCancel.attr('hidden', 'hidden').css('display', 'none');
+                        if (cilindros) try {
+                            cilindros.redraw(true);
+                        } catch (e) {}
+                    }
+                });
+            } catch (e) {
+                console.warn('No se pudo registrar rowSelectionChanged en movimientos:', e);
+            }
+        }
     });
 </script>
     ENDTEXT
 
-    INIT DIALOG oWeb RETURN
-
-    ?>
+INIT DIALOG oWeb RETURN
+?>

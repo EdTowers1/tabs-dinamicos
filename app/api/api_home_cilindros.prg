@@ -587,3 +587,8 @@ static function DoAgregar_Cilindro(oDom)
     CloseConnect(oDom, hInfo)
 
 return nil
+
+
+// -------------------------------------------------- //
+
+static function DoActualizar_movimiento(oDom, hInfo)
