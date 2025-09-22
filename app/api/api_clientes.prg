@@ -316,11 +316,10 @@ static function DoSelecionar_Cliente (oDom)
 		if oQry != NIL .and. !oQry:eof()
 			hFull := oQry:FillHRow()
 					
-			cInfoCliente := "ID: " + ltrim(str(hFull['row_id'])) + CHR(13) + CHR(10) + ;
-				"Código: " + hFull['codcli'] + CHR(13) + CHR(10) + ;
-				"Nombre: " + hb_strtoutf8(hFull['nombre_tercero']) + CHR(13) + CHR(10) ;
-													
+			cInfoCliente := "Código: " + hFull['codcli'] + CHR(13) + CHR(10) + ;
+				"Nombre: " + hb_strtoutf8(hFull['nombre_tercero']) + CHR(13) + CHR(10)
 			oDom:SetDlg( 'home_cilindros' )
+			oDom:Set( 'cCliente', hFull['codcli'] )
 			oDom:Set( 'cInfoCliente', cInfoCliente )
 			oDom:DialogClose('ayuda_cliente')
 		endif

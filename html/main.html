@@ -39,9 +39,52 @@ DEFINE WEB oWeb TITLE 'Sistema de Gestión de Cilindros'
         // JavaScript para la funcionalidad de pestañas dinámicas
         HTML o
 
+            <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
             <script>
 							// Sistema de pestañas dinámicas
 							document.addEventListener('DOMContentLoaded', function () {
+								// Helpers globales para alertas/confirmaciones usando SweetAlert2 con fallback
+								if (!window.showAlert) {
+									window.showAlert = function (type, text, title) {
+										if (window.Swal && Swal.fire) {
+											Swal.fire({
+												icon: type || 'info',
+												title: title || (type === 'error' ? 'Atención' : type === 'warning' ? 'Aviso' : 'Información'),
+												text: text || '',
+												confirmButtonText: 'OK'
+											});
+										} else {
+											alert(text || '');
+										}
+									}
+								}
+
+								if (!window.confirmDialog) {
+									window.confirmDialog = function (message, title) {
+										if (window.Swal && Swal.fire) {
+											return Swal.fire({
+												icon: 'question',
+												title: title || 'Confirmar',
+												text: message || '¿Está seguro?',
+												showCancelButton: true,
+												confirmButtonText: 'Sí',
+												cancelButtonText: 'No'
+											}).then(function (res) { return res.isConfirmed; });
+										}
+										return Promise.resolve(confirm(message || '¿Está seguro?'));
+									}
+								}
+
+								if (!window.confirmLogout) {
+									window.confirmLogout = function (e) {
+										e = e || window.event;
+										if (e) e.preventDefault();
+										var href = (e && e.currentTarget && e.currentTarget.getAttribute('href')) || 'logout';
+										(window.confirmDialog ? window.confirmDialog('¿Desea cerrar sesión?', 'Cerrar sesión') : Promise.resolve(confirm('¿Desea cerrar sesión?')))
+											.then(function (ok) { if (ok) window.location.href = href; });
+										return false;
+									}
+								}
 								var tabCounter = 0;
 								var defaultBg = '#f8f9fa';
 								var colors = ['#e3f2fd', '#fce4ec', '#e8f5e9', '#fff3e0', '#f3e5f5', '#e0f7fa', '#f9fbe7'];
@@ -85,7 +128,19 @@ DEFINE WEB oWeb TITLE 'Sistema de Gestión de Cilindros'
 									btnTab.innerHTML = '<span>' + (title || 'Tab') + '</span><span class="tab-close" title="Cerrar">&times;</span>';
 
 									btnTab.addEventListener('click', function (e) { if (e.target.classList.contains('tab-close')) return; activarTab(btnTab); });
-									btnTab.querySelector('.tab-close').addEventListener('click', function (e) { e.stopPropagation(); if (confirm('¿Deseas cerrar "' + (title || tabId) + '"?')) { li.remove(); var paneToRemove = document.getElementById(paneId); if (paneToRemove) paneToRemove.remove(); var first = tabList.querySelector('.nav-link'); if (first) activarTab(first); else tabContent.style.backgroundColor = defaultBg; } });
+									btnTab.querySelector('.tab-close').addEventListener('click', function (e) {
+										e.stopPropagation();
+										var msg = '¿Deseas cerrar "' + (title || tabId) + '"?';
+										(window.confirmDialog ? window.confirmDialog(msg, 'Confirmar') : Promise.resolve(confirm(msg)))
+											.then(function (ok) {
+												if (!ok) return;
+												li.remove();
+												var paneToRemove = document.getElementById(paneId);
+												if (paneToRemove) paneToRemove.remove();
+												var first = tabList.querySelector('.nav-link');
+												if (first) activarTab(first); else tabContent.style.backgroundColor = defaultBg;
+											});
+									});
 
 									li.appendChild(btnTab); tabList.appendChild(li);
 
@@ -143,7 +198,19 @@ DEFINE WEB oWeb TITLE 'Sistema de Gestión de Cilindros'
 									btnTab.innerHTML = '<span>' + (title || 'Tab ' + idx) + '</span><span class="tab-close" title="Cerrar">&times;</span>';
 
 									btnTab.addEventListener('click', function (e) { if (e.target.classList.contains('tab-close')) return; activarTab(btnTab); });
-									btnTab.querySelector('.tab-close').addEventListener('click', function (e) { e.stopPropagation(); if (confirm('¿Deseas cerrar "' + (title || tabId) + '"?')) { li.remove(); var paneToRemove = document.getElementById(paneId); if (paneToRemove) paneToRemove.remove(); var first = tabList.querySelector('.nav-link'); if (first) activarTab(first); else tabContent.style.backgroundColor = defaultBg; } });
+									btnTab.querySelector('.tab-close').addEventListener('click', function (e) {
+										e.stopPropagation();
+										var msg = '¿Deseas cerrar "' + (title || tabId) + '"?';
+										(window.confirmDialog ? window.confirmDialog(msg, 'Confirmar') : Promise.resolve(confirm(msg)))
+											.then(function (ok) {
+												if (!ok) return;
+												li.remove();
+												var paneToRemove = document.getElementById(paneId);
+												if (paneToRemove) paneToRemove.remove();
+												var first = tabList.querySelector('.nav-link');
+												if (first) activarTab(first); else tabContent.style.backgroundColor = defaultBg;
+											});
+									});
 
 									li.appendChild(btnTab); tabList.appendChild(li);
 
@@ -163,7 +230,11 @@ DEFINE WEB oWeb TITLE 'Sistema de Gestión de Cilindros'
 										var pane = e.target.closest('.tab-pane');
 										var tabIndex = pane ? pane.id.replace('pane-', '') : '?';
 										var value = input ? input.value : '';
-										alert('Valor en Tab ' + tabIndex + ': ' + value);
+										if (window.showAlert) {
+											window.showAlert('info', 'Valor en Tab ' + tabIndex + ': ' + value, 'Información');
+										} else {
+											alert('Valor en Tab ' + tabIndex + ': ' + value);
+										}
 									}
 								});
 
@@ -235,7 +306,19 @@ DEFINE WEB oWeb TITLE 'Sistema de Gestión de Cilindros'
 										btnTab.innerHTML = '<span>' + titulo + '</span><span class="tab-close" title="Cerrar">&times;</span>';
 
 										btnTab.addEventListener('click', function (e) { if (e.target.classList.contains('tab-close')) return; activarTab(btnTab); });
-										btnTab.querySelector('.tab-close').addEventListener('click', function (e) { e.stopPropagation(); if (confirm('¿Deseas cerrar "' + titulo + '"?')) { li.remove(); var paneToRemove = document.getElementById(paneId); if (paneToRemove) paneToRemove.remove(); var first = tabList.querySelector('.nav-link'); if (first) activarTab(first); else tabContent.style.backgroundColor = defaultBg; } });
+										btnTab.querySelector('.tab-close').addEventListener('click', function (e) {
+											e.stopPropagation();
+											var msg = '¿Deseas cerrar "' + titulo + '"?';
+											(window.confirmDialog ? window.confirmDialog(msg, 'Confirmar') : Promise.resolve(confirm(msg)))
+												.then(function (ok) {
+													if (!ok) return;
+													li.remove();
+													var paneToRemove = document.getElementById(paneId);
+													if (paneToRemove) paneToRemove.remove();
+													var first = tabList.querySelector('.nav-link');
+													if (first) activarTab(first); else tabContent.style.backgroundColor = defaultBg;
+												});
+										});
 
 										li.appendChild(btnTab); tabList.appendChild(li);
 
@@ -277,7 +360,19 @@ DEFINE WEB oWeb TITLE 'Sistema de Gestión de Cilindros'
 										btnTab.innerHTML = '<span>' + titulo + ' (Error)</span><span class="tab-close" title="Cerrar">&times;</span>';
 
 										btnTab.addEventListener('click', function (e) { if (e.target.classList.contains('tab-close')) return; activarTab(btnTab); });
-										btnTab.querySelector('.tab-close').addEventListener('click', function (e) { e.stopPropagation(); if (confirm('¿Deseas cerrar "' + titulo + '"?')) { li.remove(); var paneToRemove = document.getElementById(paneId); if (paneToRemove) paneToRemove.remove(); var first = tabList.querySelector('.nav-link'); if (first) activarTab(first); else tabContent.style.backgroundColor = defaultBg; } });
+										btnTab.querySelector('.tab-close').addEventListener('click', function (e) {
+											e.stopPropagation();
+											var msg = '¿Deseas cerrar "' + titulo + '"?';
+											(window.confirmDialog ? window.confirmDialog(msg, 'Confirmar') : Promise.resolve(confirm(msg)))
+												.then(function (ok) {
+													if (!ok) return;
+													li.remove();
+													var paneToRemove = document.getElementById(paneId);
+													if (paneToRemove) paneToRemove.remove();
+													var first = tabList.querySelector('.nav-link');
+													if (first) activarTab(first); else tabContent.style.backgroundColor = defaultBg;
+												});
+										});
 
 										li.appendChild(btnTab); tabList.appendChild(li);
 

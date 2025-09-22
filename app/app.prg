@@ -19,6 +19,11 @@ function main()
 
 	Config()
 
+	// Si quieres ejecutar un UPDATE de prueba al iniciar el servidor,
+	// descomenta la siguiente línea. La configuración se toma de connect.ini
+	// sección [startup] con keys: enabled = 1, docto = <valor>, cliente = <valor>
+	// RunStartupUpdate(o)
+
 	hb_threadStart( @WebServer() )
 
 	while inkey(0) != VK_ESCAPE
@@ -68,6 +73,7 @@ function WebServer()
 
 	// ---------------- Rutas para funciones ----------------
 	oServer:Route( 'logout'						, 'logout' )
+		oServer:Route( 'prueba'						, 'prueba' )
 	// oServer:Route( 'recepcion', 'recepcion' )
 
 
@@ -75,13 +81,14 @@ function WebServer()
 
 
 	//	-----------------------------------------------------------------------//
-	*/
+	///
 	IF ! oServer:Run()
 
 		? "=> Server error:", oServer:cError
 
 		RETU 1
 	ENDIF
+
 
 RETURN 0
 
@@ -122,21 +129,21 @@ retu nil
 
 function Config()
 
-  REQUEST HB_LANG_ES
+	REQUEST HB_LANG_ES
 	REQUEST HB_CODEPAGE_ESMWIN
 
-    SET Deleted  ON
-    SET CENTURY  ON
-    SET TIME FORMAT TO "hh:mm"
-    SET Date     TO ANSI
-    SET EPOCH    TO 1960
-    SET DECIMALS TO 2
-    SET CONFIRM  OFF
-    SET EXACT    ON
+	SET Deleted  ON
+	SET CENTURY  ON
+	SET TIME FORMAT TO "hh:mm"
+	SET Date     TO ANSI
+	SET EPOCH    TO 1960
+	SET DECIMALS TO 2
+	SET CONFIRM  OFF
+	SET EXACT    ON
 
-	RddSetDefault( 'DBFCDX' )
-   	HB_Langselect("ES")
-   	HB_CDPSelect("ESMWIN")
+	// RddSetDefault( 'DBFCDX' )
+	HB_Langselect("ES")
+	HB_CDPSelect("ESMWIN")
 
 
 retu nil
@@ -167,11 +174,11 @@ function Conect_database(oDom,hInfo)
 	Local oErr
 	Local hParms:=Loadini()
 
-    IF  hParms['lerror']
-        hInfo['lerror']         :=  .t.
-        hInfo['lerrordetalle']  :=  hParms['lerrordetalle']
-        return nil
-    endif
+	IF  hParms['lerror']
+		hInfo['lerror']         :=  .t.
+		hInfo['lerrordetalle']  :=  hParms['lerrordetalle']
+		return nil
+	endif
 
 
 	TRY
@@ -181,12 +188,12 @@ function Conect_database(oDom,hInfo)
 			val(hParms["port"])  ,;
 			val(hParms["flags"]) ,;
 			hParms["dbname"] )
-            hInfo['lerror']         :=  .f.
-            hInfo['lerrordetalle']  :=  ""
+		hInfo['lerror']         :=  .f.
+		hInfo['lerrordetalle']  :=  ""
 
 	CATCH oErr
-            hInfo['lerror']         :=  .t.
-            hInfo['lerrordetalle']  :=  "No pudo conectar al servidor Sql  "  //+ hb_dumpvar( oErr )
+		hInfo['lerror']         :=  .t.
+		hInfo['lerrordetalle']  :=  "No pudo conectar al servidor Sql  "  //+ hb_dumpvar( oErr )
 	END
 
 RETURN NIL
@@ -196,25 +203,44 @@ RETURN NIL
 // -------------------------------------------------- //
 Static function Loadini()
 
-Local oErr
-Local c := "mariadb"
-Local hParms := {=>}
-Local hini
+	Local oErr
+	Local c := "mariadb"
+	Local hParms := {=>}
+	Local hini
 
 	TRY
-        hIni   := HB_ReadIni( "connect.ini" )
-        hParms['host']          :=  hIni[ c ]["host"]
-        hParms['user']          :=  hIni[ c ]["user"]
-        hParms['psw']           :=  hIni[ c ]["psw"]
-        hParms['port']          :=  hIni[ c ]["port"]
-        hParms['flags']         :=  hIni[ c ]["flags"]
-        hParms['dbname']        :=  hIni[ c ]["dbname"]
-        hParms['lerror']        :=  .f.
-        hParms['lerrordetalle'] :=	""
-    CATCH oErr
-        hParms['lerror']         :=  .T.
-        hParms['lerrordetalle']  :=  "No se pudo abrir configuración, "  //+  hb_dumpvar( oErr )
-        //? hb_dumpvar( oErr )
-    End
+		hIni   := HB_ReadIni( "connect.ini" )
+		hParms['host']          :=  hIni[ c ]["host"]
+		hParms['user']          :=  hIni[ c ]["user"]
+		hParms['psw']           :=  hIni[ c ]["psw"]
+		hParms['port']          :=  hIni[ c ]["port"]
+		hParms['flags']         :=  hIni[ c ]["flags"]
+		hParms['dbname']        :=  hIni[ c ]["dbname"]
+		hParms['lerror']        :=  .f.
+		hParms['lerrordetalle'] :=	""
+	CATCH oErr
+		hParms['lerror']         :=  .T.
+		hParms['lerrordetalle']  :=  "No se pudo abrir configuración, "  //+  hb_dumpvar( oErr )
+		//? hb_dumpvar( oErr )
+	End
 
 RETURN (hParms)
+
+
+// Optional startup helper: run a single UPDATE for tests
+// static function RunStartupUpdate( oDom, hInfo)
+// 	local hIni := HB_ReadIni('connect.ini')
+
+// 	    if hInfo == NIL
+//         hInfo := InitInfo(oDom)
+//     endif
+
+
+// 	// Ejecutar UPDATE (tratamos docto como texto; quitar comillas si es numérico)
+// 	hInfo['db']:Query( "UPDATE m_docto_header SET codcli = '830095793' WHERE row_id = 1" )
+	
+
+
+
+// return nil
+

@@ -594,25 +594,23 @@ return nil
 
 static function DoActualizarMovimiento(oDom, hInfo)
 
-    local cDlg := 'home_cilindros'
-    local cDocto := ''
-    local cCodCli := ''
-    local oRow, oQry
+    local cDlg := 'home_cilindros', cDocto := '', cCodCli := ''
+    local oQry, aCilindros := {}, hCil, cCilJson := "", cCodigo := "", oChk, cSql
+    local oRow
     hb_default( @hInfo, NIL )
 
     if hInfo == NIL
         hInfo := InitInfo( oDom )
     endif
 
-    // Obtener número de documento
+    // Obtener número de documento y cliente desde el DOM
     cDocto := AllTrim( oDom:Get( 'cOrden' ) )
-    // Obtener código de cliente
     cCodCli := AllTrim( oDom:Get( 'cCliente' ) )
 
     // Validaciones simples
     if empty( cDocto )
         oDom:SetAlert( 'Seleccione un movimiento (docto) para actualizar.' )
-        return nil 
+        return nil
     endif
     if empty( cCodCli )
         oDom:SetAlert( 'Ingrese el código del cliente para actualizar.' )
@@ -626,7 +624,11 @@ static function DoActualizarMovimiento(oDom, hInfo)
         return nil
     endif
 
-    // Comprobar existencia del cliente (consulta ligera)
+    // Escapar valores para SQL
+    cDocto := StrTran( cDocto, "'", "''" )
+    cCodCli := StrTran( cCodCli, "'", "''" )
+
+    // Comprobar existencia del cliente
     oQry := hInfo['db']:Query( "SELECT 1 AS ok FROM m_terceros WHERE codcli = '" + cCodCli + "' LIMIT 1" )
     if oQry == NIL .or. oQry:reccount() == 0
         oDom:SetAlert( 'El código de cliente ' + cCodCli + ' no existe.' )
@@ -634,17 +636,77 @@ static function DoActualizarMovimiento(oDom, hInfo)
         return nil
     endif
 
-    // Ejecutar UPDATE (SqlQuery para DML)
-    hInfo['db']:SqlQuery( "UPDATE m_docto_header SET codcli = '" + cCodCli + "' WHERE docto = '" + cDocto + "'" )
+    // Iniciar transacción y aplicar cambios
+    BEGIN SEQUENCE
+        hInfo['db']:SqlQuery( "START TRANSACTION" )
 
-    // Mensaje y refresco
-    oDom:SetAlert( 'Cliente actualizado correctamente para el movimiento ' + cDocto )
+        // Actualizar encabezado
+        hInfo['db']:SqlQuery( "UPDATE m_docto_header SET codcli = '" + cCodCli + "' WHERE docto = '" + cDocto + "'" )
 
+        // Obtener lista de cilindros desde DOM: preferir JSON oculto, si no, intentar obtener tabla
+        aCilindros := {}
+        cCilJson := oDom:Get( 'cilindros_json' )
+        if ! empty( cCilJson )
+            aCilindros := hb_jsonDecode( cCilJson )
+        else
+            // intentar leer directamente el control 'cilindros' si el DOM lo provee
+            aCilindros := oDom:Get( 'cilindros' )
+        endif
+
+        // Normalizar estructura: cada elemento debe contener 'CODIGO' / 'codigo' / 'codigo_articulo'
+        if ValType( aCilindros ) $ 'A' .and. Len( aCilindros ) > 0
+            for each hCil in aCilindros
+                cCodigo := ''
+                if ValType( hCil ) $ 'AOH'
+                    if ! hb_isNil( hCil['CODIGO'] )
+                        cCodigo := hCil['CODIGO']
+                    elseif ! hb_isNil( hCil['codigo'] )
+                        cCodigo := hCil['codigo']
+                    elseif ! hb_isNil( hCil['codigo_articulo'] )
+                        cCodigo := hCil['codigo_articulo']
+                    endif
+                elseif ValType( hCil ) == 'C'
+                    cCodigo := hCil
+                endif
+
+                cCodigo := AllTrim( cCodigo )
+                if empty( cCodigo )
+                    continue
+                endif
+
+                // Escapar
+                cCodigo := StrTran( cCodigo, "'", "''" )
+
+                // Si no existe en el cuerpo, insertarlo
+                oChk := hInfo['db']:Query( "SELECT 1 AS ok FROM m_docto_body WHERE docto = '" + cDocto + "' AND codigo_articulo = '" + cCodigo + "' LIMIT 1" )
+                if oChk == NIL .or. oChk:reccount() == 0
+                    cSql := "INSERT INTO m_docto_body (docto, codigo_articulo, cantidad, precio_docto) VALUES ('" + cDocto + "', '" + cCodigo + "', 1, 0)"
+                    hInfo['db']:SqlQuery( cSql )
+                endif
+            next
+        endif
+
+        // Confirmar transacción
+        hInfo['db']:SqlQuery( "COMMIT" )
+
+        oDom:SetAlert( 'Cliente y cilindros (nuevos) actualizados correctamente para el movimiento ' + cDocto )
+    RECOVER
+        // Intentar deshacer cambios si hay fallo
+        hInfo['db']:SqlQuery( "ROLLBACK" )
+        oDom:SetError( 'Error actualizando movimiento.' )
+        CloseConnect( oDom, hInfo )
+        return nil
+    END SEQUENCE
+
+    // Cerrar conexión
     CloseConnect( oDom, hInfo )
 
-    oDom:Set('cCliente', "")
+    // Limpiar campos y refrescar UI
+    oDom:Set( 'cCliente', "" )
+    oDom:Set( 'cNuevoCilindro', "" )
 
-    // Refrescar datos en UI
-    DoNav_Refresh( oDom, hInfo )
+    // Refrescar detalle y navegación
+    DoSincronizar( oDom )
+    DoNav_Refresh( oDom )
 
 return nil

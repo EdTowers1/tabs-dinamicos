@@ -85,6 +85,9 @@ DEFINE BROWSE oBrw ID cID OPTIONS hOpciones EVENTS aEvents OF oForm
         if ('hozAlign' $ aCol)
             hColCfg['hozAlign'] := aCol['hozAlign']
         endif
+        if ('headerSort' $ aCol)
+            hColCfg['headerSort'] := aCol['headerSort']
+        endif
 
         // default behaviour for resizable
         hColCfg['resizable'] := .f.

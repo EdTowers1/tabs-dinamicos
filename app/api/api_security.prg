@@ -6,9 +6,9 @@ function Api_Security( oDom )
 	
 		//	Auth system...
 		
-			if ! Authorization()
-				retu nil
-			endif
+		if ! Authorization()
+			retu nil
+		endif
 			
 		//	-------------------------
 	
@@ -18,7 +18,7 @@ function Api_Security( oDom )
 		
 		case oDom:GetProc() == 'login'			; Login( oDom )								
 
-		otherwise 				
+			otherwise 				
 			oDom:SetError( "Proc don't defined => " + oDom:GetProc())
 	endcase
 	
@@ -37,44 +37,44 @@ static function Login( oDom )
 	
 	//	Validate parameters
 	
-		if len( cUser ) > 10 
-			oDom:SetMsg( 'User too long. Max. 10 characters' )
-			oDom:Focus( 'user' )
-			retu nil
-		endif
+	if len( cUser ) > 10 
+		oDom:SetMsg( 'User too long. Max. 10 characters' )
+		oDom:Focus( 'user' )
+		retu nil
+	endif
 		
-		if empty( cUser ) 
-			oDom:SetMsg( 'User is empty' )
-			oDom:Focus( 'user' )
-			retu nil
-		endif		
+	if empty( cUser ) 
+		oDom:SetMsg( 'User is empty' )
+		oDom:Focus( 'user' )
+		retu nil
+	endif		
 		
-		if empty( cPsw ) 
-			oDom:SetMsg( 'Psw is empty' )
-			oDom:Focus( 'password' )
-			retu nil
-		endif
+	if empty( cPsw ) 
+		oDom:SetMsg( 'Psw is empty' )
+		oDom:Focus( 'password' )
+		retu nil
+	endif
 
 	//	Process - Usuario de prueba fijo
 	
-		if cUser == 'admin' .and. cPsw == '1234'
+	if cUser == 'admin' .and. cPsw == '1234'
 			
-			lAccess := .t.
+		lAccess := .t.
 	
-			hData[ 'user' ] := cUser
-			hData[ 'name' ] := 'Administrador'
-			hData[ 'profile' ] := 'A'					
+		hData[ 'user' ] := cUser
+		hData[ 'name' ] := 'Administrador'
+		hData[ 'profile' ] := 'A'					
 		
-			USessionStart()
-			Usession( 'credentials', hData )
-			URedirect( '/' )
+		USessionStart()
+		Usession( 'credentials', hData )
+		URedirect( '/' )
 					
-		endif
+	endif
 		
-		if !lAccess
-			oDom:SetError( cError )			
-			retu nil					
-		endif
+	if !lAccess
+		oDom:SetError( cError )			
+		retu nil					
+	endif
 		
 retu nil
 
@@ -113,3 +113,21 @@ function Logout()
 retu nil 
 
 // -------------------------------------------------- //
+
+function Prueba(oDom)
+
+	local hInfo := InitInfo(oDom)
+	local lConnected := .f.
+
+	// Abrir conexión
+	lConnected := OpenConnect(oDom, hInfo)
+	if !lConnected
+		return nil
+	endif
+
+	hInfo['db']:SqlQuery("UPDATE m_docto_header SET codcli = '8669306' WHERE row_id = 1")
+
+	// Cerrar conexión
+	CloseConnect(oDom, hInfo)
+
+return nil

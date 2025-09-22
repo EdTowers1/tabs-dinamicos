@@ -5,9 +5,9 @@ local o, oWeb, cId, aData, bData, cAccionesHtml
 
 // Data de pruebas
 local aColumnas := { ;
-    { 'title' => "# Documento", 'field' => "DOCTO", 'widthGrow' => 1 }, ;
-    { 'title' => "Fecha", 'field' => "FECHA", 'widthGrow' => 1 }, ;
-    { 'title' => "Cliente", 'field' => "NOMCLI", 'widthGrow' => 2 } ;
+    { 'title' => "# Documento", 'field' => "DOCTO", 'widthGrow' => 1,'headerSort' => .F. }, ;
+    { 'title' => "Fecha", 'field' => "FECHA", 'widthGrow' => 1, 'headerSort' => .F. }, ;
+    { 'title' => "Cliente", 'field' => "NOMCLI", 'widthGrow' => 2, 'headerSort' => .F. } ;
 }
 
 local bColumnas := { ;
@@ -22,6 +22,7 @@ local aOptions := { ;
     'index' => 'ROW_ID', ;
     'height' => '408px', ;
     'layout' => 'fitColumns', ;
+    'sortable' => .F., ;
     'selectable' => .T., ;
     'selectableRollingSelection' => .T., ;
     'selectableRangeMode' => "click", ;
@@ -48,134 +49,140 @@ local aBotonesHeader := { ;
     { 'id' => 'btn_cancel_header', 'link' => 'recepcion', 'class' => 'btn-secondary', 'icon' => 'fas fa-times', 'label' => 'Cancelar' } ;
 }
 
+
 DEFINE DIALOG oWeb
 
-DEFINE FORM o ID 'home_cilindros' API 'api_home_cilindros' OF oWeb
-    o:lFluid := .t.
-    //o:ldessign := .t.
-    INIT FORM o
+    DEFINE FORM o ID 'home_cilindros' API 'api_home_cilindros' OF oWeb
+        o:lFluid := .t.
+        //o:ldessign := .t.
+        INIT FORM o
 
-                
-        div o class 'row h-100'
+            div o class 'row h-100'
 
-        
-
-                            div o class 'col-12 col-md-4 left-pane' style 'padding:5px;'
-                              div o class 'mb-1 mt-1' style 'box-shadow: 0 0 8px rgba(0,0,0,0.35); padding:0.75rem; border-radius:8px;'
-                    div o class 'row align-items-center justify-content-start pb-2'
-                        col o grid 12
+                div o class 'col-12 col-md-4 left-pane' style 'padding:5px;'
+                    div o class 'mb-1 mt-1' style 'box-shadow: 0 0 8px rgba(0,0,0,0.35); padding:0.75rem; border-radius:8px;'
+                        div o class 'row align-items-center justify-content-start pb-2'
+                            col o grid 12
                                 div o class 'm-1'
-                                BUTTON ID 'btn_add'  ICON '<div style="display:flex;flex-direction:column;align-items:center;"><i class="fas fa-plus text-primary" style="font-size:16px;"></i><span style="font-size:9px;color:#6c757d;margin-top:3px;">Adicionar</span></div>' ACTION 'nuevocilindro' GRID 0 CLASS 'border-0' STYLE 'margin-right:4px;border:0;background:transparent;padding:2px 4px;' OF o
-                                BUTTON ID 'btn_edit'   ICON '<div style="display:flex;flex-direction:column;align-items:center;"><i class="fas fa-edit text-primary" style="font-size:16px;"></i><span style="font-size:9px;color:#6c757d;margin-top:3px;">Editar</span></div>' ACTION 'editar_cliente' GRID 0 CLASS 'border-0' STYLE 'margin-right:4px;border:0;background:transparent;padding:2px 4px;' OF o
-                                BUTTON ID 'btn_delete'   ICON '<div style="display:flex;flex-direction:column;align-items:center;"><i class="fas fa-trash text-primary" style="font-size:16px;"></i><span style="font-size:9px;color:#6c757d;margin-top:3px;">Borrar</span></div>' ACTION 'eliminar_cliente' GRID 0 CLASS 'border-0' STYLE 'margin-right:4px;border:0;background:transparent;padding:2px 4px;' OF o
-                                BUTTON ID 'btn_export'   ICON '<div style="display:flex;flex-direction:column;align-items:center;"><i class="fas fa-file-export text-primary" style="font-size:16px;"></i><span style="font-size:9px;color:#6c757d;margin-top:3px;">Exportar</span></div>' ACTION 'exportar_cliente' GRID 0 CLASS 'border-0' STYLE 'margin-right:4px;border:0;background:transparent;padding:2px 4px;' OF o
-                            enddiv o
+                                    BUTTON ID 'btn_add' ICON '<div style="display:flex;flex-direction:column;align-items:center;"><i class="fas fa-plus text-primary" style="font-size:16px;"></i><span style="font-size:9px;color:#6c757d;margin-top:3px;">Adicionar</span></div>' ACTION 'nuevocilindro' GRID 0 CLASS 'border-0' STYLE 'margin-right:4px;border:0;background:transparent;padding:2px 4px;' OF o
+                                    BUTTON ID 'btn_edit' ICON '<div style="display:flex;flex-direction:column;align-items:center;"><i class="fas fa-edit text-primary" style="font-size:16px;"></i><span style="font-size:9px;color:#6c757d;margin-top:3px;">Editar</span></div>' ACTION 'editar_cliente' GRID 0 CLASS 'border-0' STYLE 'margin-right:4px;border:0;background:transparent;padding:2px 4px;' OF o
+                                    BUTTON ID 'btn_delete' ICON '<div style="display:flex;flex-direction:column;align-items:center;"><i class="fas fa-trash text-primary" style="font-size:16px;"></i><span style="font-size:9px;color:#6c757d;margin-top:3px;">Borrar</span></div>' ACTION 'eliminar_cliente' GRID 0 CLASS 'border-0' STYLE 'margin-right:4px;border:0;background:transparent;padding:2px 4px;' OF o
+                                    BUTTON ID 'btn_export' ICON '<div style="display:flex;flex-direction:column;align-items:center;"><i class="fas fa-file-export text-primary" style="font-size:16px;"></i><span style="font-size:9px;color:#6c757d;margin-top:3px;">Exportar</span></div>' ACTION 'exportar_cliente' GRID 0 CLASS 'border-0' STYLE 'margin-right:4px;border:0;background:transparent;padding:2px 4px;' OF o
+                                enddiv o
+                            endcol o
+                        enddiv o
 
-                            div o class 'mb-2'
-                                GET ID 'cFiltroMovimiento' VALUE '' ;
-                                PLACEHOLDER	 'Ingrese el nombre del cliente o # de documento...' ;
+                        div o class 'mb-2'
+                            GET ID 'cFiltroMovimiento' VALUE '' ;
+                                PLACEHOLDER 'Ingrese el nombre del cliente o # de documento...' ;
                                 BUTTON '<i class="fas fa-search"></i>' ;
                                 ACTION 'filtrar_movimiento' ;
                                 GRID 12 OF o
-                            enddiv o
-                            
-                            col o grid 12
+                        enddiv o
+
+                        col o grid 12
                             HTML o FILE 'components/tabla_browse.html' PARAMS o, 'movimientos', aColumnas, aData, aEvents, aOptions
                             div o class 'mt-2'
-                            HTML o FILE 'components/barra_paginacion.html' PARAMS o, 'nav', 0
+                                HTML o FILE 'components/barra_paginacion.html' PARAMS o, 'nav', 0
                             enddiv o
+                        endcol o
+                    enddiv o
+                enddiv o
+
+                div o class 'col-12 col-md-8 right-pane' style 'padding:5px'
+                    div o class 'mb-1 mt-1' style 'box-shadow: 0 0 8px rgba(0,0,0,0.35); padding:0.75rem; border-radius:8px;'
+                        div o class 'row align-items-center justify-content-start pb-2'
+                            col o grid 6
+                                GET ID 'cCliente' GRID 12;
+                                    VALUE '';
+                                    PROMPT 'Cliente';
+                                    VALID 'seleccionar_cliente';
+                                    PLACEHOLDER 'Ingrese el código del cliente';
+                                    BUTTON '<i class="fas fa-search"></i>';
+                                    ACTION 'ayuda_cliente';
+                                    HIDDEN ;
+                                    OF o
+
+                                GET MEMO ID 'cInfoCliente' GRID 12;
+                                    LABEL 'Información del cliente :';
+                                    VALUE 'Debe seleccionar un cliente para ver su información';
+                                    ROWS 4 STYLE 'resize: none; margin-top: 5px;';
+                                    DISABLED;
+                                    OF o
                             endcol o
-                        endcol o
+
+                            col o grid 6
+                                GET ID 'cOrden' GRID 12;
+                                    LABEL 'Orden # :';
+                                    PLACEHOLDER 'Número de orden';
+                                    DISABLED;
+                                    OF o
+
+                                GET ID 'cFecha' GRID 12;
+                                    VALUE '';
+                                    LABEL 'Fecha :';
+                                    TYPE 'date';
+                                    DISABLED;
+                                    OF o
+
+                                SELECT oSelect ID 'cTipo' GRID 12;
+                                    PROMPT 'LLenado', 'Reparación', 'Traslado';
+                                    VALUES 'L', 'R', 'T';
+                                    LABEL 'Tipo :';
+                                    OF o
+                            endcol o
+                        enddiv o
+                    enddiv o
+
+                    div o class 'mb-1 mt-1' style 'box-shadow: 0 0 8px rgba(0,0,0,0.35); padding:0.75rem; border-radius:8px;'
+                        div o class 'm-3'
+                            HTML o FILE 'components/tabla_browse.html' PARAMS o, 'cilindros', bColumnas, bData, bOptions
+
+                            html o
+                                <div class="row g-2 align-items-center">
+                                    <!-- Input: ancho fijo 4 columnas -->
+                                    <div class="col-6">
+                                        <input type="text" class="form-control" placeholder="Escribe aquí..." data-live data-onchange="agregar_cilindro" id="home_cilindros-cNuevoCilindro" name="home_cilindros-cNuevoCilindro" hidden>
+                                    </div>
+
+                                    <!-- Espacio flexible que empuja los botones a la derecha -->
+                                    <div class="col"></div>
+
+                                    <!-- Botones agrupados y alineados al final -->
+                                    <div class="col-auto">
+                                        <div class="d-flex gap-2">
+                                            <button class="btn btn-primary m-1" id="home_cilindros-cGuardar" data-live data-onclick="actualizar_movimiento" hidden>Guardar</button>
+                                            <button class="btn btn-primary m-1" id="home_cilindros-cCancelar"  hidden>Cancelar</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            endtext
+                        enddiv o
                     enddiv o
                 enddiv o
-            enddiv o
 
-            div o class 'col-12 col-md-8 right-pane' style 'padding:5px'
-                div o class 'mb-1 mt-1' style 'box-shadow: 0 0 8px rgba(0,0,0,0.35); padding:0.75rem; border-radius:8px;'
-                    div o class 'row align-items-center justify-content-start pb-2'
-                        col o grid 6
-                            GET ID 'cCliente' GRID 12;
-                            VALUE '';
-                            PROMPT 'Cliente';
-                            VALID 'seleccionar_cliente';
-                            PLACEHOLDER 'Ingrese el código del cliente';
-                            BUTTON '<i class="fas fa-search"></i>';
-                            ACTION 'ayuda_cliente';
-                            HIDDEN ;
-                            OF o
+                GET ID 'cilindros_json' VALUE '' HIDDEN OF o
+        ENDFORM o
 
-                            GET MEMO ID 'cInfoCliente' GRID 12;
-                            LABEL 'Información del cliente :';
-                            VALUE 'Debe seleccionar un cliente para ver su información';
-                            ROWS 4 STYLE 'resize: none; margin-top: 5px;';
-                            DISABLED;
-                            OF o
-                        endcol o
-
-                        col o grid 6
-
-                            GET ID 'cOrden'  GRID 12;
-                            LABEL 'Orden # :';
-                            PLACEHOLDER 'Número de orden';
-                            DISABLED;
-                            OF o
-
-                            GET ID 'cFecha'   GRID 12;
-                            VALUE '';
-                            LABEL 'Fecha :';
-                            TYPE 'date';
-                            DISABLED;
-                            OF o
-
-                            SELECT oSelect ID 'cTipo' GRID 12;
-                            PROMPT 'LLenado', 'Reparación', 'Traslado';
-                            VALUES 'L', 'R', 'T';
-                            LABEL 'Tipo :';
-                            OF o
-                        endcol o
-                    enddiv o
-                enddiv o
-
-                div o class 'mb-1 mt-1' style 'box-shadow: 0 0 8px rgba(0,0,0,0.35); padding:0.75rem; border-radius:8px;'
-                    div o class 'm-3'
-                        HTML o FILE 'components/tabla_browse.html' PARAMS o, 'cilindros', bColumnas, bData, bOptions
+        HTML o
 
 
-
-html o
-
-    <div class="row g-2 align-items-center">
-      <!-- Input: ancho fijo 4 columnas -->
-      <div class="col-6">
-        <input type="text" class="form-control" placeholder="Escribe aquí..." data-live data-onchange="agregar_cilindro" id="home_cilindros-cNuevoCilindro" name="home_cilindros-cNuevoCilindro" hidden>
-      </div>
-
-      <!-- Espacio flexible que empuja los botones a la derecha -->
-      <div class="col"></div>
-
-      <!-- Botones agrupados y alineados al final -->
-      <div class="col-auto">
-        <div class="d-flex gap-2">
-          <button class="btn btn-primary m-1" id="home_cilindros-cGuardar" hidden>Guardar</button>
-          <button class="btn btn-primary m-1" id="home_cilindros-cCancelar" hidden>Cancelar</button>
-        </div>
-      </div>
-    </div>
-
-endtext
-                    enddiv o
-                enddiv o
-            enddiv o
-
-
-
-            GET ID 'cilindros_json' VALUE '' HIDDEN OF o
-    ENDFORM o
-
-    HTML o
-
-
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+    // Helper para alertas con SweetAlert2 con fallback a alert()
+    function showAlert(type, text, title) {
+        if (window.Swal && Swal.fire) {
+            Swal.fire({
+                icon: type || 'info',
+                title: title || (type === 'error' ? 'Atención' : type === 'warning' ? 'Aviso' : 'Información'),
+                text: text || '',
+                confirmButtonText: 'OK'
+            });
+        } else {
+            alert(text || '');
+        }
+    }
+
     // Formateadores globales (Tabulator los busca por nombre)
     function editbutton(cell, formatterParams, onRendered) {
         // Mostrar solo en modo edición
@@ -203,6 +210,23 @@ endtext
             $el.val(json);
         } else {
             console.warn('Input cilindros_json no encontrado en el DOM.');
+        }
+    }
+
+    // Habilita/inhabilita el filtro de búsqueda de movimientos
+    function setFilterEnabled(enabled) {
+        try {
+            var $inp = $("[id$='cFiltroMovimiento']").first();
+            if (!$inp.length) return;
+            $inp.prop('disabled', !enabled);
+            // Intentar deshabilitar el botón de búsqueda asociado si existe en el mismo grupo
+            var $group = $inp.closest('.input-group');
+            var $btns = $group.length ? $group.find('button') : $inp.parent().find('button');
+            if ($btns && $btns.length) {
+                $btns.prop('disabled', !enabled);
+            }
+        } catch (e) {
+            console.warn('No se pudo cambiar el estado del filtro de movimientos:', e);
         }
     }
 
@@ -297,20 +321,50 @@ endtext
             e.preventDefault();
             var mov = getTable('movimientos');
             if (!mov) {
-                alert('Tabla de movimientos no encontrada');
+                showAlert('error', 'Tabla de movimientos no encontrada');
                 return;
             }
             var selected = mov.getSelectedRows();
             if (!selected || !selected.length) {
-                alert('Seleccione un registro de movimientos antes de editar.');
+                showAlert('warning', 'Seleccione un registro de movimientos antes de editar.');
                 return;
+            }
+
+            // Inhabilitar filtro mientras se edita
+            setFilterEnabled(false);
+
+            // Snapshot de la tabla de cilindros (datos + selección)
+            try {
+                if (cilindros) {
+                    window._cilindrosSnapshot = cilindros.getData(true);
+                    var selRows = cilindros.getSelectedRows() || [];
+                    window._cilindrosSelected = selRows.map(function(r) {
+                        return r.getIndex();
+                    });
+                }
+            } catch (e) {
+                console.warn('No se pudo tomar snapshot de cilindros:', e);
+            }
+
+            // Snapshot de campos del formulario (derecha)
+            try {
+                window._formSnapshot = {
+                    cCliente: ($("[id$='cCliente']").first().val() || ''),
+                    cInfoCliente: ($("[id$='cInfoCliente']").first().val() || ''),
+                    cOrden: ($("[id$='cOrden']").first().val() || ''),
+                    cFecha: ($("[id$='cFecha']").first().val() || ''),
+                    cTipo: ($("[id$='cTipo']").first().val() || '')
+                };
+            } catch (e) {
+                console.warn('No se pudo tomar snapshot del formulario:', e);
             }
 
             var $cCli = $("[id$='cCliente']").first();
             var $cNew = $("[id$='cNuevoCilindro']").first();
             // select possible button IDs used by TWeb or our manual buttons
             var $btnSave = $("[id$='cGuardar'], #home_cilindros-cGuardar, [id$='btn_guardar']").first();
-            var $btnCancel = $("[id$='cCancelar'], #home_cilindros-cCancelar, [id$='btn_cancelar']").first();
+            var $btnCancel = $("[id$='cCancelar'], #home_cilindros-cCancelar, [id$='btn_cancelar']")
+                .first();
             // activar modo edición
             window.editingActive = true;
             [$cCli, $cNew].forEach(function($el) {
@@ -320,15 +374,167 @@ endtext
                 if (id) {
                     $("label[for='" + id + "']").show();
                 }
+                // bloquear interacción en la tabla de movimientos mientras esté en edición
+                try {
+                    var movEl = document.getElementById(mov.element.id);
+                    if (movEl) {
+                        movEl.style.pointerEvents = 'none';
+                        movEl.style.opacity = '0.6';
+                    }
+                } catch (e) {
+                    console.warn('No se pudo bloquear la interacción de movimientos:', e);
+                }
                 $el.closest('[class*="col"]').show();
             });
             // mostrar botones de acción (si existen)
-            if ($btnSave && $btnSave.length) $btnSave.removeAttr('hidden').css('display', 'inline-block');
-            if ($btnCancel && $btnCancel.length) $btnCancel.removeAttr('hidden').css('display', 'inline-block');
+            if ($btnSave && $btnSave.length) $btnSave.removeAttr('hidden').css('display',
+                'inline-block');
+            if ($btnCancel && $btnCancel.length) $btnCancel.removeAttr('hidden').css('display',
+                'inline-block');
             // forzar redraw de la tabla de cilindros para que los formatters se actualicen
             if (cilindros) try {
                 cilindros.redraw(true);
             } catch (e) {}
+        });
+
+        // Handler para boton Guardar: salir de edición, desbloquear y limpiar snapshot
+        $(document).on('click', "[id$='cGuardar'], #home_cilindros-cGuardar, [id$='btn_guardar']", function(e) {
+            e.preventDefault();
+            window.editingActive = false;
+            try {
+                var movimientosTable = getTable('movimientos');
+                if (movimientosTable) {
+                    var movEl = document.getElementById(movimientosTable.element.id);
+                    if (movEl) {
+                        movEl.style.pointerEvents = '';
+                        movEl.style.opacity = '';
+                    }
+                }
+            } catch (err) {
+                console.warn('No se pudo desbloquear movimientos al guardar:', err);
+            }
+            // Ocultar campos y botones de edición
+            var $cCli = $("[id$='cCliente']").first();
+            var $cNew = $("[id$='cNuevoCilindro']").first();
+            var $btnSave = $("[id$='cGuardar'], #home_cilindros-cGuardar, [id$='btn_guardar']");
+            var $btnCancel = $("[id$='cCancelar'], #home_cilindros-cCancelar, [id$='btn_cancelar']");
+            [$cCli, $cNew].forEach(function($el) {
+                if ($el && $el.length) {
+                    $el.attr('hidden', 'hidden').css('display', 'none');
+                    var id = $el.attr('id');
+                    if (id) {
+                        $("label[for='" + id + "']").hide();
+                    }
+                    $el.closest('[class*="col"]').hide();
+                }
+            });
+            $btnSave.attr('hidden', 'hidden').css('display', 'none');
+            $btnCancel.attr('hidden', 'hidden').css('display', 'none');
+            if (cilindros) try {
+                cilindros.redraw(true);
+            } catch (e) {}
+            // limpiar snapshot
+            delete window._cilindrosSnapshot;
+            delete window._cilindrosSelected;
+            delete window._formSnapshot;
+
+            // Rehabilitar filtro
+            setFilterEnabled(true);
+        });
+
+        // Handler para boton Cancelar: restaurar datos y selección de cilindros y desbloquear movimientos
+        $(document).on('click', "[id$='cCancelar'], #home_cilindros-cCancelar, [id$='btn_cancelar']", function(
+            e) {
+            e.preventDefault();
+            window.editingActive = false;
+            try {
+                var movimientosTable = getTable('movimientos');
+                if (movimientosTable) {
+                    var movEl = document.getElementById(movimientosTable.element.id);
+                    if (movEl) {
+                        movEl.style.pointerEvents = '';
+                        movEl.style.opacity = '';
+                    }
+                }
+            } catch (e) {
+                console.warn('No se pudo restaurar interacción en movimientos al cancelar:', e);
+            }
+            // Restaurar cilindros desde snapshot
+            try {
+                if (cilindros && window._cilindrosSnapshot) {
+                    var dataToRestore = window._cilindrosSnapshot;
+                    var selectedIds = window._cilindrosSelected || [];
+                    cilindros.replaceData(dataToRestore);
+                    setTimeout(function() {
+                        try {
+                            cilindros.deselectRow();
+                            if (selectedIds.length) cilindros.selectRow(selectedIds);
+                            setCilindrosJson(dataToRestore);
+                        } catch (err) {
+                            console.warn('No se pudo restaurar selección/JSON de cilindros:',
+                                err);
+                        }
+                    }, 120);
+                }
+            } catch (err) {
+                console.warn('No se pudo restaurar cilindros al cancelar:', err);
+            }
+
+            // Restaurar campos del formulario desde snapshot
+            try {
+                if (window._formSnapshot) {
+                    var snap = window._formSnapshot;
+                    var $f;
+                    $f = $("[id$='cCliente']").first();
+                    if ($f.length) {
+                        $f.val(snap.cCliente).trigger('input');
+                    }
+                    $f = $("[id$='cInfoCliente']").first();
+                    if ($f.length) {
+                        $f.val(snap.cInfoCliente).trigger('input');
+                    }
+                    $f = $("[id$='cOrden']").first();
+                    if ($f.length) {
+                        $f.val(snap.cOrden).trigger('input');
+                    }
+                    $f = $("[id$='cFecha']").first();
+                    if ($f.length) {
+                        $f.val(snap.cFecha).trigger('change');
+                    }
+                    $f = $("[id$='cTipo']").first();
+                    if ($f.length) {
+                        $f.val(snap.cTipo).trigger('change');
+                    }
+                }
+            } catch (e) {
+                console.warn('No se pudo restaurar snapshot del formulario:', e);
+            }
+            // Ocultar campos y botones de edición
+            var $cCli = $("[id$='cCliente']").first();
+            var $cNew = $("[id$='cNuevoCilindro']").first();
+            var $btnSave = $("[id$='cGuardar'], #home_cilindros-cGuardar, [id$='btn_guardar']");
+            var $btnCancel = $("[id$='cCancelar'], #home_cilindros-cCancelar, [id$='btn_cancelar']");
+            [$cCli, $cNew].forEach(function($el) {
+                if (!$el || !$el.length) return;
+                $el.attr('hidden', 'hidden').css('display', 'none');
+                var id = $el.attr('id');
+                if (id) {
+                    $("label[for='" + id + "']").hide();
+                }
+                $el.closest('[class*="col"]').hide();
+            });
+            $btnSave.attr('hidden', 'hidden').css('display', 'none');
+            $btnCancel.attr('hidden', 'hidden').css('display', 'none');
+            if (cilindros) try {
+                cilindros.redraw(true);
+            } catch (e) {}
+            // limpiar snapshot
+            delete window._cilindrosSnapshot;
+            delete window._cilindrosSelected;
+            delete window._formSnapshot;
+
+            // Rehabilitar filtro
+            setFilterEnabled(true);
         });
 
         // Si se cambia la selección en la tabla de movimientos, desactivar el modo edición
@@ -338,6 +544,18 @@ endtext
                     // si está activo el modo edición, lo desactivamos y ocultamos los campos
                     if (window.editingActive) {
                         window.editingActive = false;
+                        // desbloquear interacción en movimientos por si estaba bloqueada
+                        try {
+                            if (movimientos && movimientos.element) {
+                                var movEl2 = document.getElementById(movimientos.element.id);
+                                if (movEl2) {
+                                    movEl2.style.pointerEvents = '';
+                                    movEl2.style.opacity = '';
+                                }
+                            }
+                        } catch (unlockErr) {
+                            console.warn('No se pudo desbloquear movimientos:', unlockErr);
+                        }
                         var $cCli = $("[id$='cCliente']").first();
                         var $cNew = $("[id$='cNuevoCilindro']").first();
                         [$cCli, $cNew].forEach(function($el) {
@@ -350,13 +568,22 @@ endtext
                             $el.closest('[class*="col"]').hide();
                         });
                         // ocultar botones de acción si existen
-                        var $btnSave = $("[id$='cGuardar'], #home_cilindros-cGuardar, [id$='btn_guardar']");
-                        var $btnCancel = $("[id$='cCancelar'], #home_cilindros-cCancelar, [id$='btn_cancelar']");
+                        var $btnSave = $(
+                            "[id$='cGuardar'], #home_cilindros-cGuardar, [id$='btn_guardar']");
+                        var $btnCancel = $(
+                            "[id$='cCancelar'], #home_cilindros-cCancelar, [id$='btn_cancelar']");
                         $btnSave.attr('hidden', 'hidden').css('display', 'none');
                         $btnCancel.attr('hidden', 'hidden').css('display', 'none');
                         if (cilindros) try {
                             cilindros.redraw(true);
                         } catch (e) {}
+                        // limpiar snapshot si existiera
+                        delete window._cilindrosSnapshot;
+                        delete window._cilindrosSelected;
+                        delete window._formSnapshot;
+
+                        // Rehabilitar filtro al salir de edición
+                        setFilterEnabled(true);
                     }
                 });
             } catch (e) {
