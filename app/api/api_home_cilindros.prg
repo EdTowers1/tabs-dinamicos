@@ -574,7 +574,7 @@ static function DoAgregarCilindro(oDom)
         next
         if lExists
             // cerrar conexion antes de retornar
-            oDom:SetAlert("El cilindro con código " + AllTrim(hCilindro['CODIGO']) + " ya está registrado.")
+            // oDom:SetAlert("El cilindro con código " + AllTrim(hCilindro['CODIGO']) + " ya está registrado.")
             oDom:Set('cNuevoCilindro', "")
             oDom:focus('cNuevoCilindro')
             CloseConnect(oDom, hInfo)

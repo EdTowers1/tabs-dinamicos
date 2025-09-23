@@ -64,10 +64,10 @@ DEFINE DIALOG oWeb
                         div o class 'row align-items-center justify-content-start pb-2'
                             col o grid 12
                                 div o class 'm-1'
-                                    BUTTON ID 'btn_add' ICON '<div style="display:flex;flex-direction:column;align-items:center;"><i class="fas fa-plus text-primary" style="font-size:16px;"></i><span style="font-size:9px;color:#6c757d;margin-top:3px;">Adicionar</span></div>' ACTION 'nuevocilindro' GRID 0 CLASS 'border-0' STYLE 'margin-right:4px;border:0;background:transparent;padding:2px 4px;' OF o
-                                    BUTTON ID 'btn_edit' ICON '<div style="display:flex;flex-direction:column;align-items:center;"><i class="fas fa-edit text-primary" style="font-size:16px;"></i><span style="font-size:9px;color:#6c757d;margin-top:3px;">Editar</span></div>' ACTION 'editar_cliente' GRID 0 CLASS 'border-0' STYLE 'margin-right:4px;border:0;background:transparent;padding:2px 4px;' OF o
-                                    BUTTON ID 'btn_delete' ICON '<div style="display:flex;flex-direction:column;align-items:center;"><i class="fas fa-trash text-primary" style="font-size:16px;"></i><span style="font-size:9px;color:#6c757d;margin-top:3px;">Borrar</span></div>' ACTION 'eliminar_cliente' GRID 0 CLASS 'border-0' STYLE 'margin-right:4px;border:0;background:transparent;padding:2px 4px;' OF o
-                                    BUTTON ID 'btn_export' ICON '<div style="display:flex;flex-direction:column;align-items:center;"><i class="fas fa-file-export text-primary" style="font-size:16px;"></i><span style="font-size:9px;color:#6c757d;margin-top:3px;">Exportar</span></div>' ACTION 'exportar_cliente' GRID 0 CLASS 'border-0' STYLE 'margin-right:4px;border:0;background:transparent;padding:2px 4px;' OF o
+                                    BUTTON ID 'btn_add' ICON '<div style="display:flex;flex-direction:column;align-items:center;"><i class="fas fa-plus text-primary" style="font-size:16px;"></i><span style="font-size:9px;color:#6c757d;margin-top:3px;">Adicionar</span></div>'  GRID 0 CLASS 'border-0' STYLE 'margin-right:4px;border:0;background:transparent;padding:2px 4px;' OF o
+                                    BUTTON ID 'btn_edit' ICON '<div style="display:flex;flex-direction:column;align-items:center;"><i class="fas fa-edit text-primary" style="font-size:16px;"></i><span style="font-size:9px;color:#6c757d;margin-top:3px;">Editar</span></div>'  GRID 0 CLASS 'border-0' STYLE 'margin-right:4px;border:0;background:transparent;padding:2px 4px;' OF o
+                                    BUTTON ID 'btn_delete' ICON '<div style="display:flex;flex-direction:column;align-items:center;"><i class="fas fa-trash text-primary" style="font-size:16px;"></i><span style="font-size:9px;color:#6c757d;margin-top:3px;">Borrar</span></div>'  GRID 0 CLASS 'border-0' STYLE 'margin-right:4px;border:0;background:transparent;padding:2px 4px;' OF o
+                                    BUTTON ID 'btn_export' ICON '<div style="display:flex;flex-direction:column;align-items:center;"><i class="fas fa-file-export text-primary" style="font-size:16px;"></i><span style="font-size:9px;color:#6c757d;margin-top:3px;">Exportar</span></div>'  GRID 0 CLASS 'border-0' STYLE 'margin-right:4px;border:0;background:transparent;padding:2px 4px;' OF o
                                 enddiv o
                             endcol o
                         enddiv o
@@ -125,11 +125,11 @@ DEFINE DIALOG oWeb
                                     DISABLED;
                                     OF o
 
-                                SELECT oSelect ID 'cTipo' GRID 12;
-                                    PROMPT 'LLenado', 'Reparación', 'Traslado';
-                                    VALUES 'L', 'R', 'T';
-                                    LABEL 'Tipo :';
-                                    OF o
+                                // SELECT oSelect ID 'cTipo' GRID 12;
+                                //     PROMPT 'LLenado', 'Reparación', 'Traslado';
+                                //     VALUES 'L', 'R', 'T';
+                                //     LABEL 'Tipo :';
+                                //     OF o
                             endcol o
                         enddiv o
                     enddiv o
