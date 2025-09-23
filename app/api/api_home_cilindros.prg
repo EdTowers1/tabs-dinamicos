@@ -452,6 +452,9 @@ static function DoSincronizar(oDom)
 
         // Actualizar tabla de cilindros
         oDom:TableSetData( 'cilindros', aCilindros )
+
+        // Actualizar el campo JSON con la lista cargada
+        oDom:Set('cilindros_json', hb_jsonEncode(aCilindros))
     endif 
 
     CloseConnect(oDom, hInfo)
@@ -547,6 +550,7 @@ static function DoAgregarCilindro(oDom)
     // Construir el hash del cilindro (ajusta los campos según tus columnas)
     hCilindro['CODIGO']  := hFull['cil_codigo']
     hCilindro['CANTIDAD']:= 1
+    hCilindro['PRECIO']  := 0  // Ajusta si hay un campo de precio en tbcilindros
 
     // Obtener los cilindros actuales de la tabla desde el campo oculto JSON
     cCilindrosJson := oDom:Get('cilindros_json')
@@ -583,6 +587,9 @@ static function DoAgregarCilindro(oDom)
     // Actualizar la tabla de cilindros
     oDom:TableSetData('cilindros', aCilindros)
 
+    // Actualizar el campo JSON con la lista actualizada
+    oDom:Set('cilindros_json', hb_jsonEncode(aCilindros))
+
     oDom:Set('cNuevoCilindro', "")
 
     CloseConnect(oDom, hInfo)
@@ -597,7 +604,13 @@ static function DoActualizarMovimiento(oDom, hInfo)
     local cDlg := 'home_cilindros'
     local cDocto := ''
     local cCodCli := ''
+    local cCodCliActual := ''
     local oRow, oQry
+    local aCilindros := {}
+    local cCilindrosJson := ''
+    local hCilindro
+    local lClienteCambio := .f.
+    local lCilindrosAgregados := .f.
     hb_default( @hInfo, NIL )
 
     if hInfo == NIL
@@ -609,42 +622,81 @@ static function DoActualizarMovimiento(oDom, hInfo)
     // Obtener código de cliente
     cCodCli := AllTrim( oDom:Get( 'cCliente' ) )
 
-    // Validaciones simples
-    if empty( cDocto )
-        oDom:SetAlert( 'Seleccione un movimiento (docto) para actualizar.' )
-        return nil 
-    endif
-    if empty( cCodCli )
-        oDom:SetAlert( 'Ingrese el código del cliente para actualizar.' )
-        oDom:focus( 'cCliente' )
-        return nil
-    endif
-
     // Abrir conexión
     if ! OpenConnect( oDom, hInfo )
         oDom:SetError( 'No se pudo conectar a la base de datos.' )
         return nil
     endif
 
-    // Comprobar existencia del cliente (consulta ligera)
-    oQry := hInfo['db']:Query( "SELECT 1 AS ok FROM m_terceros WHERE codcli = '" + cCodCli + "' LIMIT 1" )
+    // Validar que se haya seleccionado un movimiento
+    if empty( cDocto )
+        oDom:SetAlert( 'Seleccione un movimiento (docto) para actualizar.' )
+        CloseConnect( oDom, hInfo )
+        return nil 
+    endif
+
+    // Consultar cliente actual del movimiento
+    oQry := hInfo['db']:Query( "SELECT codcli FROM m_docto_header WHERE docto = '" + cDocto + "' LIMIT 1" )
     if oQry == NIL .or. oQry:reccount() == 0
-        oDom:SetAlert( 'El código de cliente ' + cCodCli + ' no existe.' )
+        oDom:SetAlert( 'El movimiento ' + cDocto + ' no existe.' )
+        CloseConnect( oDom, hInfo )
+        return nil
+    endif
+    cCodCliActual := AllTrim( oQry:codcli )
+
+    // Verificar si el cliente cambió
+    lClienteCambio := !empty( cCodCli ) .and. cCodCli != cCodCliActual
+
+    // Obtener cilindros de la tabla visual
+    cCilindrosJson := oDom:Get('cilindros_json')
+    if !empty(cCilindrosJson)
+        aCilindros := hb_jsonDecode(cCilindrosJson)
+    else
+        aCilindros := {}
+    endif
+
+    // Agregar cilindros nuevos a la base de datos
+    for each hCilindro in aCilindros
+        // Verificar si ya existe en m_docto_body
+        oQry := hInfo['db']:Query( "SELECT 1 FROM m_docto_body WHERE docto = '" + cDocto + "' AND codigo_articulo = '" + hCilindro['CODIGO'] + "' LIMIT 1" )
+        if oQry == NIL .or. oQry:reccount() == 0
+            // Insertar nuevo cilindro
+            hInfo['db']:SqlQuery( "INSERT INTO m_docto_body (docto, codigo_articulo, cantidad, precio_docto) VALUES ('" + cDocto + "', '" + hCilindro['CODIGO'] + "', " + ltrim(str(hCilindro['CANTIDAD'])) + ", " + ltrim(str(hCilindro['PRECIO'])) + ")" )
+            lCilindrosAgregados := .t.
+        endif
+    next
+
+    // Si el cliente cambió, validar y actualizar
+    if lClienteCambio
+        // Validar que el nuevo cliente exista
+        oQry := hInfo['db']:Query( "SELECT 1 AS ok FROM m_terceros WHERE codcli = '" + cCodCli + "' LIMIT 1" )
+        if oQry == NIL .or. oQry:reccount() == 0
+            oDom:SetAlert( 'El código de cliente ' + cCodCli + ' no existe.' )
+            CloseConnect( oDom, hInfo )
+            return nil
+        endif
+
+        // Ejecutar UPDATE
+        hInfo['db']:SqlQuery( "UPDATE m_docto_header SET codcli = '" + cCodCli + "' WHERE docto = '" + cDocto + "'" )
+    endif
+
+    // Si no hubo cambios, no mostrar mensaje ni refrescar
+    if !lClienteCambio .and. !lCilindrosAgregados
         CloseConnect( oDom, hInfo )
         return nil
     endif
 
-    // Ejecutar UPDATE (SqlQuery para DML)
-    hInfo['db']:SqlQuery( "UPDATE m_docto_header SET codcli = '" + cCodCli + "' WHERE docto = '" + cDocto + "'" )
+    // Mensaje de éxito
+    oDom:SetAlert( 'Movimiento actualizado correctamente.' )
 
-    // Mensaje y refresco
-    oDom:SetAlert( 'Cliente actualizado correctamente para el movimiento ' + cDocto )
-
-    CloseConnect( oDom, hInfo )
-
-    oDom:Set('cCliente', "")
+    // Limpiar campo de cliente si cambió
+    if lClienteCambio
+        oDom:Set('cCliente', "")
+    endif
 
     // Refrescar datos en UI
     DoNav_Refresh( oDom, hInfo )
+
+    CloseConnect( oDom, hInfo )
 
 return nil
