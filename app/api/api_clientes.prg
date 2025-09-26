@@ -17,11 +17,22 @@ return oDom:Send()
 // -------------------------------------------------- //
 
 static function InitBrowse( oDom )
-
 	local hInfo := InitInfo( oDom )
+	local lRes := .f.
 
-	// Reutilizar la lógica de consulta y actualización
-return DoBrowse( hInfo, oDom )
+	// Abrir conexión y calcular totales primero para proteger contra SP que falla con 0 filas
+	if OpenConnect( oDom, hInfo )
+		if TotalRows( oDom, hInfo )
+			lRes := DoBrowse( hInfo, oDom )
+		else
+			lRes := .f.
+		endif
+		CloseConnect( oDom, hInfo )
+	else
+		lRes := .f.
+	endif
+
+return lRes
 
 // -------------------------------------------------- //
 
@@ -46,6 +57,19 @@ static function DoBrowse( hInfo, oDom )
 	nPageNumber := hInfo['page']           // 1 por defecto
 	cSearchData := hInfo['filtro']         // filtro de búsqueda
 
+	// Si ya ejecutamos TotalRows y el total es 0, no llamar al stored proc (evita fallos del driver)
+	if HB_HHasKey( hInfo, 'total_checked' ) .and. hInfo['total'] == 0
+		// Enviar tabla vacía y valores de paginación al cliente
+		aClientes := {}
+		oDom:TableSetData('clientes', aClientes)
+		oDom:Set( 'nav_total', 0 )
+		// Mostrar página 1 por defecto cuando no hay filas
+		hInfo['page'] := 1
+		oDom:Set( 'nav_page', '1' )
+		oDom:Set( 'nav_page_total', ltrim( str( hInfo['page_total'] ) ) )
+		return .t.
+	endif
+
 	cSql := "CALL usp_terceros_lista(" + ;
 		ltrim(str(nPageSize)) + ", " + ;
 		ltrim(str(nPageNumber)) + ", '" + cSearchData + "', " + ;
@@ -63,6 +87,11 @@ static function DoBrowse( hInfo, oDom )
 
 		// Actualizar la tabla con los datos obtenidos
 		oDom:TableSetData('clientes', aClientes)
+
+		// Si conocemos el total (TotalRows fue ejecutado), enviar también el total
+		if HB_HHasKey( hInfo, 'total' )
+			oDom:Set( 'nav_total', hInfo['total'] )
+		endif
 
 		// Devolver al cliente el estado de paginación (útil para la UI)
 		oDom:Set( 'nav_page', ltrim( str( nPageNumber ) ) )
@@ -107,11 +136,11 @@ static function ChangePage( oDom, nDelta )
 	// Aplicar delta
 	nPage := nPage + nDelta
 
-	// Limitar entre 1 y page_total
+	// Limitar entre 1 y page_total (si page_total >= 1)
 	if nPage < 1
 		nPage := 1
 	endif
-	if HB_HHasKey( hInfo, 'page_total' ) .and. nPage > hInfo['page_total']
+	if HB_HHasKey( hInfo, 'page_total' ) .and. hInfo['page_total'] >= 1 .and. nPage > hInfo['page_total']
 		nPage := hInfo['page_total']
 	endif
 
@@ -145,13 +174,32 @@ return ChangePage( oDom, -1 )
 static function Nav_Top( oDom )
 
 	local hInfo := InitInfo( oDom )
+	local lRes := .f.
 
+	// Abrir conexión y calcular totales para evitar llamar al SP si no hay filas
+	if ! OpenConnect( oDom, hInfo )
+		return .f.
+	endif
+
+	if ! TotalRows( oDom, hInfo )
+		CloseConnect( oDom, hInfo )
+		return .f.
+	endif
+
+	// Ir a la primera página
 	hInfo['page'] := 1
+
+	// Ejecutar búsqueda con hInfo actualizado
+	lRes := DoBrowse( hInfo, oDom )
+
+	// Cerrar conexión
+	CloseConnect( oDom, hInfo )
 
 	// Informar al cliente
 	oDom:Set( 'nav_page', '1' )
+	oDom:Set( 'nav_page_total', ltrim( str( hInfo['page_total'] ) ) )
 
-return DoBrowse( hInfo, oDom )
+return lRes
 
 // -------------------------------------------------- //
 
@@ -167,7 +215,9 @@ static function TotalRows( oDom, hInfo )
 
 	// Aplicar filtro simple si existe
 	if !empty( hInfo['filtro'] )
-		cSql += " WHERE UPPER(nombre_tercero) LIKE '%" + Upper( hInfo['filtro'] ) + "%'"
+		// Buscar tanto por nombre como por código de cliente (codcli)
+		cSql += " WHERE (UPPER(nombre_tercero) LIKE '%" + Upper( hInfo['filtro'] ) + "%'" + ;
+			" OR UPPER(codcli) LIKE '%" + Upper( hInfo['filtro'] ) + "%')"
 	endif
 
 	oQry := hInfo['db']:Query( cSql )
@@ -175,6 +225,8 @@ static function TotalRows( oDom, hInfo )
 	if oQry != NIL
 		nTotal := oQry:total
 		hInfo['total'] := nTotal
+		// Marcar que ya comprobamos el total para evitar llamadas al SP cuando no hay filas
+		hInfo['total_checked'] := .T.
 	else
 		oDom:SetError( 'Error counting records' )
 		return .f.
@@ -211,7 +263,12 @@ static function Nav_End( oDom )
 	endif
 
 	// Ir a última página
-	hInfo['page'] := hInfo['page_total']
+	// Si no hay páginas, mantener página 1 y evitar pasar 0 al stored proc
+	if hInfo['page_total'] < 1
+		hInfo['page'] := 1
+	else
+		hInfo['page'] := hInfo['page_total']
+	endif
 
 	// Cargar datos
 	lRes := DoBrowse( hInfo, oDom )
@@ -292,23 +349,6 @@ static function Select_cliente( oDom )
 		if HB_HHasKey( hRow, 'NOMCLI' )
 			cNombre := hRow['NOMCLI']
 		endif
-
-		// // Si no tenemos código o nombre, hacer la consulta como fallback
-		// if empty( cCodcli ) .or. empty( cNombre )
-		// 	hInfo := InitInfo( oDom )
-		// 	if ! OpenConnect( oDom, hInfo )
-		// 		return nil
-		// 	endif
-
-		// 	oQry := hInfo['db']:Query( "SELECT * FROM m_terceros WHERE row_id = " + ltrim( str( nRowId ) ) + " LIMIT 1" )
-		// 	if oQry != NIL .and. !oQry:Eof()
-		// 		hFull := oQry:FillHRow()
-		// 		cCodcli := hFull['codcli']
-		// 		cNombre := hb_strtoutf8( hFull['nombre_tercero'] )
-		// 	endif
-
-		// 	CloseConnect( oDom, hInfo )
-		// endif
 
 		// Si ya tenemos código y/o nombre, llenar diálogo
 		if !empty( cCodcli )

@@ -31,9 +31,10 @@ COL oForm GRID nGrid
 				STYLE 'width:20px;height:20px;color:#6c757d;padding:0;display:inline-flex;align-items:center;justify-content:center;' ;
 				ICON '<i class="fa fa-chevron-left fa-sm" aria-hidden="true"></i>' OF oForm
 			GET ID (cPrefijo + '_page') VALUE '1' GRID 0 ;
+				READONLY ;
 				CLASS 'btn border-0' ;
 				STYLE 'width:50px;height:22px;font-size:9px;text-align:center;display:inline-block;' ;
-				ALIGN 'center' ONCHANGE (cPrefijo + '_refresh') OF oForm
+				ALIGN 'center' OF oForm
 			BUTTON ID ('btn_' + cPrefijo + '_next') ACTION (cPrefijo + '_next') GRID 0 ;
 				CLASS 'btn btn-light border-0 rounded-circle btn-sm mx-1' ;
 				STYLE 'width:20px;height:20px;color:#6c757d;padding:0;display:inline-flex;align-items:center;justify-content:center;' ;
