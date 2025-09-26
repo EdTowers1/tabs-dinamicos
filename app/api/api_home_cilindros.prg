@@ -1,20 +1,15 @@
 function api_home_cilindros( oDom )
 
     do case
-        case oDom:GetProc() == 'ayuda_cliente'								; DoAyudaCliente( oDom )
-        case oDom:GetProc() == 'ayuda_cilindro'								; DoAyudaCilindro( oDom )
-        case oDom:GetProc() == 'seleccionar_cliente'						; DoSelecionar_Cliente(oDom)
-        case oDom:GetProc() == 'exe_consulta'       				        ; DoExeConsulta(oDom)
-        case oDom:GetProc() == 'nav_refresh'								; DoNav_Refresh( oDom )
-        case oDom:GetProc() == 'nav_top'									; DoNav_Top( oDom )
-        case oDom:GetProc() == 'nav_prev'									; DoNav_Prev( oDom )
-        case oDom:GetProc() == 'nav_next'									; DoNav_Next( oDom )
-        case oDom:GetProc() == 'nav_end'									; DoNav_End( oDom )
-        case oDom:GetProc() == 'sincronizar'								; DoSincronizar( oDom )
-        case oDom:GetProc() == 'filtrar_movimiento'						    ; DoFiltrarMovimiento( oDom )
-        case oDom:GetProc() == 'agregar_cilindro'          				    ; DoAgregarCilindro(oDom)
-        case oDom:GetProc() == 'actualizar_movimiento'			            ; DoActualizarMovimiento(oDom)
-        case oDom:GetProc() == 'obtener_consecutivo'			            ; DoObtenerConsecutivo(oDom)
+        case oDom:GetProc() == 'ayuda_cliente'								; AyudaCliente( oDom )
+        case oDom:GetProc() == 'init_browse'								; InitBrowse( oDom )
+        case oDom:GetProc() == 'sync'										; sync( oDom )
+
+
+        case oDom:GetProc() == 'agregar_cilindro'						    ; DoAgregarCilindro( oDom )
+        case oDom:GetProc() == 'actualizar_movimiento'				        ; DoActualizarMovimiento( oDom )
+        case oDom:GetProc() == 'obtener_consecutivo'				        ; DoObtenerConsecutivo( oDom )
+
 
             otherwise 				
             oDom:SetError( "Proc don't defined => " + oDom:GetProc())
@@ -24,7 +19,7 @@ retu oDom:Send()
 
 // -------------------------------------------------- //
 
-static function DoAyudaCliente( oDom )
+static function AyudaCliente( oDom )
 
     local cHtml := ULoadHtml( '../html/ayudas/ayuda_cliente.html'  )
     local o    := {=>}    
@@ -42,350 +37,147 @@ retu nil
 
 // -------------------------------------------------- //
 
-static function DoAyudaCilindro( oDom )
-
-    local cHtml := ULoadHtml( '../html/ayudas/ayuda_cilindro.html'  )
-    local o    := {=>}    
-
-    o[ 'title' ]           := 'Nuevo Cilindro'
-    o[ 'centerVertical' ]  := .T.
-    o[ 'draggable' ]       := .f.
-    o[ 'width' ]           := 800
-    
-
-    oDom:SetDialog( 'ayuda_cilindros', cHtml, nil, o )
-
-retu nil
-
-// -------------------------------------------------- //
-
-
-static function DoSelecionar_Cliente(oDom)
-    local cCodCli := AllTrim(oDom:Get('cCliente'))
-    local oQry, hFull, cInfoCliente := ""
-    local hInfo := InitInfo(oDom)
-    local lConnected := .f.
-
-    oDom:Set('cInfoCliente', "")
-
-    // Validar código de cliente
-    if hb_isNil(cCodCli) .or. empty(cCodCli)
-        oDom:Set('cCliente', "")
-        oDom:SetAlert("Debe ingresar el código del cliente.")
-        oDom:focus('cCliente')
-        return nil
-    endif
-
-    // Abrir conexión
-    lConnected := OpenConnect(oDom, hInfo)
-    if !lConnected
-        oDom:SetError("No se pudo conectar a la base de datos.")
-        return nil
-    endif
-
-    // Consultar cliente
-    oQry := hInfo['db']:Query("SELECT * FROM m_terceros WHERE codcli = '" + cCodCli + "'")
-    if oQry == NIL .or. oQry:reccount() == 0
-        oDom:SetAlert("No se encontró el cliente con código: " + cCodCli, "Error")
-        oDom:Set('cCliente', "")
-        oDom:focus('cCliente')
-        CloseConnect(oDom, hInfo)
-        return nil
-    endif
-
-    hFull := oQry:FillHRow()
-    cInfoCliente := "Código: " + hFull['codcli'] + CHR(13) + CHR(10) + ;
-        "Nombre: " + hb_strtoutf8(hFull['nombre_tercero']) + CHR(13) + CHR(10)
-
-    oDom:setDlg('home_cilindros')
-    oDom:Set('cInfoCliente', cInfoCliente)
-    
-    // oDom:focus('cOrden')
-    CloseConnect(oDom, hInfo)
-
-return nil
-
-// -------------------------------------------------- //
-
-static function DoExeConsulta( oDom )
+static function InitBrowse( oDom )
     local hInfo := InitInfo( oDom )
+    local lRes := .f.
 
-    // Abrir base de datos
-    IF ! OpenConnect(oDom, hInfo)
-        return .f.
-    endif
-
-    // Obtener total de registros
-    if ! TotalRows( oDom, hInfo )
+    // Abrir conexión y calcular totales primero para proteger contra SP que falla con 0 filas
+    if OpenConnect( oDom, hInfo )
+        if TotalRows( oDom, hInfo )
+            lRes := Browse( hInfo, oDom )
+        else
+            lRes := .f.
+        endif
         CloseConnect( oDom, hInfo )
+    else
+        lRes := .f.
     endif
 
-    // Cargar datos de la primera página
-    LoadRows( oDom, hInfo, .T. )  // .T. = inicializar browse
-
-    // Cerrar conexión
-    CloseConnect( oDom, hInfo )
-
-    // Actualizar controles DOM
-    Refresh_Nav( oDom, hInfo )
-
-return .t.
-
-// -------------------------------------------------- //
-static function DoNav_Next( oDom )
-
-    local hInfo	:= InitInfo( oDom )
-
-    //	Open Database
-    if ! OpenConnect( oDom, hInfo )
-        return nil
-    endif
-
-    //	Refresh Total rows
-    if ! TotalRows( oDom, hInfo )
-        return nil
-    endif
-
-    //	Update page
-    hInfo[ 'page' ]++
-
-    if hInfo[ 'page' ] > hInfo[ 'page_total' ]
-        hInfo[ 'page' ] := hInfo[ 'page_total' ]
-    endif
-
-    //	Load data...
-    LoadRows( oDom, hInfo )
-
-    //	Close database connection
-    CloseConnect( oDom, hInfo )
-
-    //	Refresh Dom
-    Refresh_Nav( oDom, hInfo )
-
-return nil
+return lRes
 
 // -------------------------------------------------- //
 
-static function TotalRows( oDom, hInfo )
-    local oQry, nTotal := 0
-    local cSql, cWhere := ""
-
-    hInfo[ 'total' ] := 0
-
-    // Construir cláusula WHERE para filtro general (buscar por número de documento o nombre del cliente)
-    if !empty(hInfo['filtro'])
-        cWhere := "(UPPER(t1.docto) LIKE '%" + Upper(hInfo['filtro']) + "%' OR UPPER(t2.nombre_tercero) LIKE '%" + Upper(hInfo['filtro']) + "%')"
-    endif
-
-    // Construir SQL con filtros (incluye JOIN para poder filtrar por nombre de tercero)
-    cSql := "SELECT COUNT(*) as total FROM m_docto_header t1 LEFT JOIN m_terceros t2 ON t1.codcli = t2.codcli"
-    if !empty(cWhere)
-        cSql += " WHERE " + cWhere
-    endif
-
-    // Consulta para obtener el total de registros
-    oQry := hInfo[ 'db' ]:Query( cSql )
-
-    IF oQry != NIL
-        nTotal := oQry:total
-        hInfo[ 'total' ] := nTotal
-    ELSE
-        oDom:SetError( 'Error counting records' )
-        return .f.
-    ENDIF
-
-    // Calcular total de páginas
-    hInfo[ 'page_total' ] := Int( hInfo[ 'total' ] / hInfo[ 'page_rows' ] ) + ;
-        if( hInfo[ 'total' ] % hInfo[ 'page_rows' ] == 0, 0, 1 )
-
-    // Validar página actual
-    if hInfo[ 'page' ] > hInfo[ 'page_total' ] .or. hInfo[ 'page' ] <= 0
-        hInfo[ 'page' ] := 1
-    endif
-
-return .t.
-
-// -------------------------------------------------- //
-
-static function LoadRows( oDom, hInfo, lInitBrw )
+static function Browse(hInfo, oDom)
+    
     local oQry, aMovimientos := {}, aRow := {}
-    local cSql, cWhere := "", nRowInit
+    local nPageSize, nPageNumber := 0
+    local cSearchData, nSearExact := 0
+    local cSortBy := 'docto', cSortDirection := 'D'
+    local cTransac := 'INC' , cSucursal := '01'
+    local cSql := ""
 
-    hb_default( @lInitBrw, .f. )
-
-    if !empty(hInfo['filtro'])
-        cWhere := "(UPPER(t1.docto) LIKE '%" + Upper(hInfo['filtro']) + "%' OR UPPER(t2.nombre_tercero) LIKE '%" + Upper(hInfo['filtro']) + "%')"
+    // Abrir base de datos sólo si no existe conexión en hInfo
+    if ! HB_HHasKey( hInfo, 'db' ) .or. hInfo['db'] == NIL
+        IF ! OpenConnect(oDom, hInfo)
+            return .f.
+        endif
     endif
 
-    // Calcular OFFSET para la paginación
-    nRowInit := ( hInfo[ 'page' ] - 1 ) * hInfo[ 'page_rows']
+    // Asignar valores a las variables
+    nPageSize := hInfo['page_rows']        // 10 por defecto
+    nPageNumber := hInfo['page']           // 1 por defecto
+    cSearchData := hInfo['filtro']         // filtro de búsqueda
 
-    // Construir SQL con LIMIT, OFFSET y WHERE para filtros
-    cSql := "SELECT t1.row_id, t1.docto, t1.fecha, t1.codcli, t2.nombre_tercero " + ;
-        "FROM m_docto_header t1 " + ;
-        "LEFT JOIN m_terceros t2 ON t1.codcli = t2.codcli"
-
-    if !empty(cWhere)
-        cSql += " WHERE " + cWhere
+    // Si ya ejecutamos TotalRows y el total es 0, no llamar al stored proc (evita fallos del driver)
+    if HB_HHasKey( hInfo, 'total_checked' ) .and. hInfo['total'] == 0
+        // Enviar tabla vacía y valores de paginación al cliente
+        aMovimientos := {}
+        oDom:TableSetData('movimientos', aMovimientos)
+        oDom:Set( 'nav_total', 0 )
+        // Mostrar página 1 por defecto cuando no hay filas
+        hInfo['page'] := 1
+        oDom:Set( 'nav_page', '1' )
+        oDom:Set( 'nav_page_total', ltrim( str( hInfo['page_total'] ) ) )
+        return .t.
     endif
 
-    cSql += " ORDER BY t1.docto DESC "
+    cSql := "CALL usp_documentos_lista(" + ;
+        ltrim(str(nPageSize)) + ", " + ;
+        ltrim(str(nPageNumber)) + ", '" + ;
+        cTransac + "', '" + ;
+        cSucursal + "', '" + ;
+        cSearchData + "', " + ;
+        ltrim(str(nSearExact)) + ", '" + ;
+        cSortBy + "', '" + ;
+        cSortDirection + "', @page_count )"
 
-    cSql += " LIMIT " + ltrim(str(hInfo[ 'page_rows' ])) + " OFFSET " + ltrim(str(nRowInit))
+    // Ejecutar la consulta almacenada construida en cSql
+    oQry := hInfo['db']:Query( cSql )
 
-    oQry := hInfo[ 'db' ]:Query( cSql )
-
-    IF oQry != NIL
-        oQry:gotop()
+    if oQry != NIL
+        oQry:GoTop()
         DO WHILE ! oQry:Eof()
             aRow := { 'ROW_ID' => oQry:row_id, 'DOCTO' => oQry:docto, 'FECHA' => dtoc( oQry:fecha ), 'NOMCLI' => hb_strtoutf8(oQry:nombre_tercero) }
             AADD( aMovimientos, aRow )
             oQry:Skip()
         END
-    ELSE
-        oDom:SetError( 'Error loading data' )
-        return .f.
-    ENDIF
 
-    // Actualizar tabla
-    oDom:TableSetData( 'movimientos', aMovimientos )
+        // Actualizar la tabla con los datos obtenidos
+        oDom:TableSetData('movimientos', aMovimientos)
+
+        // Si conocemos el total (TotalRows fue ejecutado), enviar también el total
+        if HB_HHasKey( hInfo, 'total' )
+            oDom:Set( 'nav_total', hInfo['total'] )
+        endif
+
+        // Devolver al cliente el estado de paginación (útil para la UI)
+        oDom:Set( 'nav_page', ltrim( str( nPageNumber ) ) )
+    else 
+        oDom:SetError( "Error loading data")
+        CloseConnect(oDom, hInfo)
+        return .f.
+    endif 
+    
+    CloseConnect(oDom, hInfo)
 
 return .t.
 
 // -------------------------------------------------- //
 
-static function Refresh_Nav( oDom, hInfo )
-    oDom:Set( 'nav_total'		, hInfo[ 'total' ] )
-    oDom:Set( 'nav_page'		, ltrim(str(hInfo[ 'page' ])) )
-    oDom:Set( 'nav_page_rows'	, ltrim(str(hInfo[ 'page_rows' ])) )
-    oDom:Set( 'nav_page_total'	, ltrim(str(hInfo[ 'page_total' ])) )
-return nil
+static function TotalRows( oDom, hInfo )
+
+    local oQry, nTotal := 0
+    local cSql := ""
+
+    hInfo['total'] := 0
+
+    cSql := "SELECT COUNT(*) as total FROM m_docto_header t1 LEFT JOIN m_terceros t2 ON t1.codcli = t2.codcli"
+
+    // aplicar filtro si existe
+    if !empty( hInfo['filtro'] )
+        // busqueda por docto o por nombre del cliente
+        cSql += " WHERE (UPPER(t1.docto) LIKE '%" +Upper( hInfo['filtro'] ) + "%'" + ;
+            " OR UPPER(t2.nombre_tercero) LIKE '%" + Upper( hInfo['filtro'] ) + "%')"
+
+    endif
+
+    oQry := hInfo['db']:Query( cSql )
+
+    if oQry != NIL
+        nTotal := oQry:total
+        hInfo['total'] := nTotal
+        // Marcar que ya comprobamos el total para evitar llamadas al SP cuando no hay filas
+        hInfo['total_checked'] := .T.
+    else
+        oDom:SetError( 'Error counting records' )
+        return .f.
+    endif
+
+    // Calcular total de páginas
+    hInfo['page_total'] := Int( hInfo['total'] / hInfo['page_rows'] ) + ;
+        if( hInfo['total'] % hInfo['page_rows'] == 0, 0, 1 )
+
+    // Validar página actual
+    if hInfo['page'] > hInfo['page_total'] .or. hInfo['page'] <= 0
+        hInfo['page'] := 1
+    endif
+
+return .t.
 
 // -------------------------------------------------- //
 
-static function DoNav_Top( oDom )
-    local hInfo	:= InitInfo( oDom )
+static function sync( oDom )
 
-    // Abrir base de datos
-    if ! OpenConnect( oDom, hInfo )
-        return nil
-    endif
-
-    // Obtener total de registros
-    if ! TotalRows( oDom, hInfo )
-        return nil
-    endif
-
-    // Ir a primera página
-    hInfo[ 'page' ] := 1
-
-    // Cargar datos
-    LoadRows( oDom, hInfo )
-
-    // Cerrar conexión
-    CloseConnect( oDom, hInfo )
-
-    // Actualizar controles DOM
-    Refresh_Nav( oDom, hInfo )
-
-return nil
-
-// -------------------------------------------------- //
-
-static function DoNav_End( oDom )
-    local hInfo	:= InitInfo( oDom )
-
-    // Abrir base de datos
-    if ! OpenConnect( oDom, hInfo )
-        return nil
-    endif
-
-    // Obtener total de registros
-    if ! TotalRows( oDom, hInfo )
-        return nil
-    endif
-
-    // Ir a última página
-    hInfo[ 'page' ] := hInfo[ 'page_total' ]
-
-    // Cargar datos
-    LoadRows( oDom, hInfo )
-
-    // Cerrar conexión
-    CloseConnect( oDom, hInfo )
-
-    // Actualizar controles DOM
-    Refresh_Nav( oDom, hInfo )
-
-return nil
-
-// -------------------------------------------------- //
-
-static function DoNav_Prev( oDom )
-    local hInfo	:= InitInfo( oDom )
-
-    // Abrir base de datos
-    if ! OpenConnect( oDom, hInfo )
-        return nil
-    endif
-
-    // Obtener total de registros
-    if ! TotalRows( oDom, hInfo )
-        return nil
-    endif
-
-    // Ir a página anterior
-    hInfo[ 'page' ]--
-
-    if hInfo[ 'page' ] <= 0
-        hInfo[ 'page' ] := 1
-    endif
-
-    // Cargar datos
-    LoadRows( oDom, hInfo )
-
-    // Cerrar conexión
-    CloseConnect( oDom, hInfo )
-
-    // Actualizar controles DOM
-    Refresh_Nav( oDom, hInfo )
-
-return nil
-
-// -------------------------------------------------- //
-
-static function DoNav_Refresh( oDom, hInfo )
-
-    // Inicializar información si no se proporciona
-    if hInfo == NIL
-        hInfo := InitInfo( oDom )
-    endif
-
-    // Abrir base de datos
-    if ! OpenConnect( oDom, hInfo )
-        return nil
-    endif
-
-    // Obtener total de registros
-    if ! TotalRows( oDom, hInfo )
-        return nil
-    endif
-
-    // Cargar datos
-    LoadRows( oDom, hInfo )
-
-    // Actualizar controles DOM
-    Refresh_Nav( oDom, hInfo )
-
-    // Cerrar conexión
-    CloseConnect( oDom, hInfo )
-
-return nil
-
-// -------------------------------------------------- //
-
-
-static function DoSincronizar(oDom) 
     local cCodigo := ''
     local cDlg := 'home_cilindros'
     local oRow
@@ -395,10 +187,10 @@ static function DoSincronizar(oDom)
     local oQry, hFull, cInfoCliente := ""
     local aCilindros := {}
     local aRow := {}
+    local cSucursal := '01', cTransac := 'INC'
 
     oRow := oDom:Get( cDlg + '-row' )
     hInfo := InitInfo(oDom)
-
 
     if hb_isNil( oRow ) .or. empty( oRow )
         oRow := oDom:Get( 'row' )
@@ -420,30 +212,29 @@ static function DoSincronizar(oDom)
         return nil
     endif
 
-    // Consultar encabezado y cuerpo del documento con JOIN y filtro por docto
-    cSql := "SELECT h.docto, h.fecha, h.codcli, t.nombre_tercero, " + ;
-        "b.codigo_articulo, b.cantidad, b.precio_docto " + ;
-        "FROM m_docto_header h " + ;
-        "LEFT JOIN m_terceros t ON h.codcli = t.codcli " + ;
-        "LEFT JOIN m_docto_body b ON h.docto = b.docto " + ;
-        "WHERE h.docto = " + cCodigo + " " + ;
-        "ORDER BY b.codigo_articulo"
+    // Llamar al stored procedure que devuelve el body del documento
+    cSql := "CALL usp_documentos_body_lista('" + cSucursal + "', '" + cTransac + "', '" + cCodigo + "')"
 
-    oQry := hInfo['db']:Query( cSql, cCodigo )
+    oQry := hInfo['db']:Query( cSql )
 
-    if oQry != NIL .and. !oQry:eof()
+    if oQry != NIL .and. ! oQry:Eof()
+        // Si el SP devuelve también datos de cabecera en la primera fila, rellenarlos
         hFull := oQry:FillHRow()
 
-        cInfoCliente := "Código: " + hFull['codcli'] + CHR(13) + CHR(10) + ;
-            "Nombre: " + hb_strtoutf8(hFull['nombre_tercero'])
+        if ! hb_isNil( hFull['nit_tercero'] )
+            cInfoCliente := "Código: " + hFull['nit_tercero'] + CHR(13) + CHR(10) + ;
+                "Nombre: " + hb_strtoutf8( iif( hb_isNil( hFull['nombre_tercero'] ), "", hFull['nombre_tercero'] ) )
+            oDom:Set('cInfoCliente', cInfoCliente)
+        endif
+
+        if ! hb_isNil( hFull['fecha'] )
+            oDom:Set('cFecha', Str(Year(hFull['fecha']), 4) + "-" + StrZero(Month(hFull['fecha']), 2) + "-" + StrZero(Day(hFull['fecha']), 2))
+        endif
 
         oDom:Set('cOrden', cCodigo)
-        oDom:Set('cFecha', Str(Year(hFull['fecha']), 4) + "-" + StrZero(Month(hFull['fecha']), 2) + "-" + StrZero(Day(hFull['fecha']), 2))
-        oDom:Set('cInfoCliente', cInfoCliente)
 
         // Llenar tabla de cilindros con los datos del cuerpo del documento
-        
-        oQry:gotop()
+        oQry:GoTop()
         DO WHILE ! oQry:Eof()
             if !hb_isNil(oQry:codigo_articulo) .and. !empty(oQry:codigo_articulo)
                 aRow := { 'CODIGO' => oQry:codigo_articulo, 'CANTIDAD' => oQry:cantidad, 'PRECIO' => oQry:precio_docto }
@@ -457,58 +248,17 @@ static function DoSincronizar(oDom)
 
         // Actualizar el campo JSON con la lista cargada
         oDom:Set('cilindros_json', hb_jsonEncode(aCilindros))
-    endif 
+    else
+        // No se obtuvieron filas: enviar tabla vacía
+        oDom:TableSetData( 'cilindros', {} )
+        oDom:Set('cilindros_json', hb_jsonEncode({}))
+    endif
 
     CloseConnect(oDom, hInfo)
 
 return nil
 
-
-static function DoFiltrarMovimiento (oDom)
-
-    local cFiltro := ""
-    local hInfo := InitInfo( oDom )
-    
-    // Obtener el valor del filtro desde el DOM
-    cFiltro := AllTrim(oDom:Get("cFiltroMovimiento"))
-
-    // Abrir conexión a la base de datos
-    if ! OpenConnect( oDom, hInfo )
-        return oDom:Send()
-    endif
-    
-    // Agregar filtro a la información
-    if !Empty(cFiltro)
-        hInfo[ 'filtro' ] := cFiltro
-    else
-        hInfo[ 'filtro' ] := ""
-    endif
-    
-    // Resetear página a 1 cuando se aplica filtro
-    hInfo[ 'page' ] := 1
-    
-    // Obtener total de registros con el filtro
-    if ! TotalRows( oDom, hInfo )
-        CloseConnect( oDom, hInfo )
-        return oDom:Send()
-    endif
-    
-    // Cargar datos filtrados
-    if ! LoadRows( oDom, hInfo, .T. )
-        CloseConnect( oDom, hInfo )
-        return oDom:Send()
-    endif
-    
-    // Cerrar conexión
-    CloseConnect( oDom, hInfo )
-    
-    // Actualizar controles de navegación
-    Refresh_Nav( oDom, hInfo )
-
-return oDom:Send()
-
 // -------------------------------------------------- //
-
 
 static function DoAgregarCilindro(oDom)
     local cCodCil := AllTrim(oDom:Get('cNuevoCilindro'))
@@ -598,7 +348,6 @@ static function DoAgregarCilindro(oDom)
 
 return nil
 
-
 // -------------------------------------------------- //
 
 static function DoActualizarMovimiento(oDom, hInfo)
@@ -637,18 +386,6 @@ static function DoActualizarMovimiento(oDom, hInfo)
         return nil 
     endif
 
-    // Consultar cliente actual del movimiento
-    oQry := hInfo['db']:Query( "SELECT codcli FROM m_docto_header WHERE docto = '" + cDocto + "' LIMIT 1" )
-    if oQry == NIL .or. oQry:reccount() == 0
-        oDom:SetAlert( 'El movimiento ' + cDocto + ' no existe.' )
-        CloseConnect( oDom, hInfo )
-        return nil
-    endif
-    cCodCliActual := AllTrim( oQry:codcli )
-
-    // Verificar si el cliente cambió
-    lClienteCambio := !empty( cCodCli ) .and. cCodCli != cCodCliActual
-
     // Obtener cilindros de la tabla visual
     cCilindrosJson := oDom:Get('cilindros_json')
     if !empty(cCilindrosJson)
@@ -663,24 +400,10 @@ static function DoActualizarMovimiento(oDom, hInfo)
         oQry := hInfo['db']:Query( "SELECT 1 FROM m_docto_body WHERE docto = '" + cDocto + "' AND codigo_articulo = '" + hCilindro['CODIGO'] + "' LIMIT 1" )
         if oQry == NIL .or. oQry:reccount() == 0
             // Insertar nuevo cilindro
-            hInfo['db']:SqlQuery( "INSERT INTO m_docto_body (docto, codigo_articulo, cantidad, precio_docto) VALUES ('" + cDocto + "', '" + hCilindro['CODIGO'] + "', " + ltrim(str(hCilindro['CANTIDAD'])) + ", " + ltrim(str(hCilindro['PRECIO'])) + ")" )
+            hInfo['db']:SqlQuery( "INSERT INTO m_docto_body (docto, codigo_articulo, cantidad, precio_docto, transac_docto, sucursal) VALUES ('" + cDocto + "', '" + hCilindro['CODIGO'] + "', " + ltrim(str(hCilindro['CANTIDAD'])) + ", " + ltrim(str(hCilindro['PRECIO'])) + ", 'INC', '01')" )
             lCilindrosAgregados := .t.
         endif
     next
-
-    // Si el cliente cambió, validar y actualizar
-    if lClienteCambio
-        // Validar que el nuevo cliente exista
-        oQry := hInfo['db']:Query( "SELECT 1 AS ok FROM m_terceros WHERE codcli = '" + cCodCli + "' LIMIT 1" )
-        if oQry == NIL .or. oQry:reccount() == 0
-            oDom:SetAlert( 'El código de cliente ' + cCodCli + ' no existe.' )
-            CloseConnect( oDom, hInfo )
-            return nil
-        endif
-
-        // Ejecutar UPDATE
-        hInfo['db']:SqlQuery( "UPDATE m_docto_header SET codcli = '" + cCodCli + "' WHERE docto = '" + cDocto + "'" )
-    endif
 
     // Si no hubo cambios, no mostrar mensaje ni refrescar
     if !lClienteCambio .and. !lCilindrosAgregados
@@ -688,16 +411,7 @@ static function DoActualizarMovimiento(oDom, hInfo)
         return nil
     endif
 
-    // Mensaje de éxito
     oDom:SetAlert( 'Movimiento actualizado correctamente.' )
-
-    // Limpiar campo de cliente si cambió
-    if lClienteCambio
-        oDom:Set('cCliente', "")
-    endif
-
-    // Refrescar datos en UI
-    DoNav_Refresh( oDom, hInfo )
 
     CloseConnect( oDom, hInfo )
 
@@ -730,7 +444,7 @@ static function DoObtenerConsecutivo( oDom )
     // Asignar variables de sesión, invocar el procedimiento y leer la salida
     hInfo['db']:SqlQuery( "SET @input = '" + cInputJson + "'" )
     hInfo['db']:SqlQuery( "SET @output = NULL" )
-    hInfo['db']:SqlQuery( "CALL consecutivo_read(@input,@output)" )
+    hInfo['db']:SqlQuery( "CALL usp_consecutivo_read(@input,@output)" )
 
     oQry := hInfo['db']:Query( "SELECT @output AS output" )
     if oQry != NIL .and. oQry:reccount() > 0
@@ -747,6 +461,3 @@ static function DoObtenerConsecutivo( oDom )
 
     CloseConnect( oDom, hInfo )
 return nil
-
-// -------------------------------------------------- //
-

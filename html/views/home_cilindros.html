@@ -40,8 +40,8 @@ local bOptions := { ;
 }
 
 local aEvents := { ;
-    { 'name' => 'tableBuilt', 'proc' => 'exe_consulta' }, ;
-    { 'name' => 'rowClick', 'proc' => 'sincronizar' } ;
+    { 'name' => 'tableBuilt', 'proc' => 'init_browse' }, ;
+    { 'name' => 'rowClick', 'proc' => 'sync' } ;
 }
 
 local aBotonesHeader := { ;
@@ -256,15 +256,15 @@ DEFINE DIALOG oWeb
     }
 
     // Inicialización de bindings
-    $(function() {
+    $(function () {
         var movimientos = getTable('movimientos');
         var cilindros = getTable('cilindros');
         // bandera que indica si estamos en modo edición activado por el botón Editar
         window.editingActive = false;
 
         if (movimientos) {
-            movimientos.on('tableBuilt', function() {
-                setTimeout(function() {
+            movimientos.on('tableBuilt', function () {
+                setTimeout(function () {
                     var rows = movimientos.getRows();
                     if (!rows.length) return;
                     try {
@@ -274,7 +274,7 @@ DEFINE DIALOG oWeb
                         var id_parent = $dlg.length ? $dlg.attr('id') : null;
                         var cApi = id_parent ? $('#' + id_parent).data('api') : null;
                         if (cApi && id_parent) {
-                            MsgApi(cApi, 'sincronizar', {
+                            MsgApi(cApi, 'sync', {
                                 row: rows[0].getData()
                             }, id_parent);
                         } else {
@@ -290,20 +290,20 @@ DEFINE DIALOG oWeb
         }
 
         if (cilindros) {
-            cilindros.on('tableBuilt', function() {
+            cilindros.on('tableBuilt', function () {
                 try {
                     setCilindrosJson(cilindros.getData());
                 } catch (e) {
                     console.warn('No se pudo obtener datos en tableBuilt', e);
                 }
             });
-            cilindros.on('dataChanged', function(data) {
+            cilindros.on('dataChanged', function (data) {
                 setCilindrosJson(data);
             });
         }
 
         // Enter -> enviar nuevo cilindro
-        $(document).on('keydown', "[id$='cNuevoCilindro']", function(e) {
+        $(document).on('keydown', "[id$='cNuevoCilindro']", function (e) {
             if (e.key === 'Enter') {
                 e.preventDefault();
                 sendAddCilindro();
@@ -311,13 +311,13 @@ DEFINE DIALOG oWeb
         });
 
         // Ajustar tamaño de tablas al cambiar ventana - Basado en el ejemplo de referencia
-        window.addEventListener("resize", function() {
+        window.addEventListener("resize", function () {
             if (movimientos) movimientos.redraw(true);
             if (cilindros) cilindros.redraw(true);
         });
 
         // Mostrar campos ocultos al hacer click en editar cuando hay fila seleccionada
-        $(document).on('click', "[id$='btn_edit']", function(e) {
+        $(document).on('click', "[id$='btn_edit']", function (e) {
             e.preventDefault();
             var mov = getTable('movimientos');
             if (!mov) {
@@ -338,7 +338,7 @@ DEFINE DIALOG oWeb
                 if (cilindros) {
                     window._cilindrosSnapshot = cilindros.getData(true);
                     var selRows = cilindros.getSelectedRows() || [];
-                    window._cilindrosSelected = selRows.map(function(r) {
+                    window._cilindrosSelected = selRows.map(function (r) {
                         return r.getIndex();
                     });
                 }
@@ -359,7 +359,6 @@ DEFINE DIALOG oWeb
                 console.warn('No se pudo tomar snapshot del formulario:', e);
             }
 
-            var $cCli = $("[id$='cCliente']").first();
             var $cNew = $("[id$='cNuevoCilindro']").first();
             // select possible button IDs used by TWeb or our manual buttons
             var $btnSave = $("[id$='cGuardar'], #home_cilindros-cGuardar, [id$='btn_guardar']").first();
@@ -367,7 +366,8 @@ DEFINE DIALOG oWeb
                 .first();
             // activar modo edición
             window.editingActive = true;
-            [$cCli, $cNew].forEach(function($el) {
+            // No habilitar el input de cliente en modo edición: solo mostrar el input para nuevo cilindro
+            [$cNew].forEach(function ($el) {
                 if (!$el || !$el.length) return;
                 $el.removeAttr('hidden').css('display', 'block');
                 var id = $el.attr('id');
@@ -394,11 +394,11 @@ DEFINE DIALOG oWeb
             // forzar redraw de la tabla de cilindros para que los formatters se actualicen
             if (cilindros) try {
                 cilindros.redraw(true);
-            } catch (e) {}
+            } catch (e) { }
         });
 
         // Handler para boton Guardar: salir de edición, desbloquear y limpiar snapshot
-        $(document).on('click', "[id$='cGuardar'], #home_cilindros-cGuardar, [id$='btn_guardar']", function(e) {
+        $(document).on('click', "[id$='cGuardar'], #home_cilindros-cGuardar, [id$='btn_guardar']", function (e) {
             e.preventDefault();
             window.editingActive = false;
             try {
@@ -414,25 +414,23 @@ DEFINE DIALOG oWeb
                 console.warn('No se pudo desbloquear movimientos al guardar:', err);
             }
             // Ocultar campos y botones de edición
-            var $cCli = $("[id$='cCliente']").first();
             var $cNew = $("[id$='cNuevoCilindro']").first();
             var $btnSave = $("[id$='cGuardar'], #home_cilindros-cGuardar, [id$='btn_guardar']");
             var $btnCancel = $("[id$='cCancelar'], #home_cilindros-cCancelar, [id$='btn_cancelar']");
-            [$cCli, $cNew].forEach(function($el) {
-                if ($el && $el.length) {
-                    $el.attr('hidden', 'hidden').css('display', 'none');
-                    var id = $el.attr('id');
-                    if (id) {
-                        $("label[for='" + id + "']").hide();
-                    }
-                    $el.closest('[class*="col"]').hide();
+            // Ocultar solo el input de nuevo cilindro (no tocar cCliente)
+            if ($cNew && $cNew.length) {
+                $cNew.attr('hidden', 'hidden').css('display', 'none');
+                var idNew = $cNew.attr('id');
+                if (idNew) {
+                    $("label[for='" + idNew + "']").hide();
                 }
-            });
+                $cNew.closest('[class*="col"]').hide();
+            }
             $btnSave.attr('hidden', 'hidden').css('display', 'none');
             $btnCancel.attr('hidden', 'hidden').css('display', 'none');
             if (cilindros) try {
                 cilindros.redraw(true);
-            } catch (e) {}
+            } catch (e) { }
             // limpiar snapshot
             delete window._cilindrosSnapshot;
             delete window._cilindrosSelected;
@@ -443,7 +441,7 @@ DEFINE DIALOG oWeb
         });
 
         // Handler para boton Cancelar: restaurar datos y selección de cilindros y desbloquear movimientos
-        $(document).on('click', "[id$='cCancelar'], #home_cilindros-cCancelar, [id$='btn_cancelar']", function(
+        $(document).on('click', "[id$='cCancelar'], #home_cilindros-cCancelar, [id$='btn_cancelar']", function (
             e) {
             e.preventDefault();
             window.editingActive = false;
@@ -465,7 +463,7 @@ DEFINE DIALOG oWeb
                     var dataToRestore = window._cilindrosSnapshot;
                     var selectedIds = window._cilindrosSelected || [];
                     cilindros.replaceData(dataToRestore);
-                    setTimeout(function() {
+                    setTimeout(function () {
                         try {
                             cilindros.deselectRow();
                             if (selectedIds.length) cilindros.selectRow(selectedIds);
@@ -514,7 +512,7 @@ DEFINE DIALOG oWeb
             var $cNew = $("[id$='cNuevoCilindro']").first();
             var $btnSave = $("[id$='cGuardar'], #home_cilindros-cGuardar, [id$='btn_guardar']");
             var $btnCancel = $("[id$='cCancelar'], #home_cilindros-cCancelar, [id$='btn_cancelar']");
-            [$cCli, $cNew].forEach(function($el) {
+            [$cCli, $cNew].forEach(function ($el) {
                 if (!$el || !$el.length) return;
                 $el.attr('hidden', 'hidden').css('display', 'none');
                 var id = $el.attr('id');
@@ -527,7 +525,7 @@ DEFINE DIALOG oWeb
             $btnCancel.attr('hidden', 'hidden').css('display', 'none');
             if (cilindros) try {
                 cilindros.redraw(true);
-            } catch (e) {}
+            } catch (e) { }
             // limpiar snapshot
             delete window._cilindrosSnapshot;
             delete window._cilindrosSelected;
@@ -540,7 +538,7 @@ DEFINE DIALOG oWeb
         // Si se cambia la selección en la tabla de movimientos, desactivar el modo edición
         if (movimientos) {
             try {
-                movimientos.on('rowSelectionChanged', function(data, rows) {
+                movimientos.on('rowSelectionChanged', function (data, rows) {
                     // si está activo el modo edición, lo desactivamos y ocultamos los campos
                     if (window.editingActive) {
                         window.editingActive = false;
@@ -556,17 +554,15 @@ DEFINE DIALOG oWeb
                         } catch (unlockErr) {
                             console.warn('No se pudo desbloquear movimientos:', unlockErr);
                         }
-                        var $cCli = $("[id$='cCliente']").first();
                         var $cNew = $("[id$='cNuevoCilindro']").first();
-                        [$cCli, $cNew].forEach(function($el) {
-                            if (!$el || !$el.length) return;
-                            $el.attr('hidden', 'hidden').css('display', 'none');
-                            var id = $el.attr('id');
-                            if (id) {
-                                $("label[for='" + id + "']").hide();
+                        if ($cNew && $cNew.length) {
+                            $cNew.attr('hidden', 'hidden').css('display', 'none');
+                            var idNew2 = $cNew.attr('id');
+                            if (idNew2) {
+                                $("label[for='" + idNew2 + "']").hide();
                             }
-                            $el.closest('[class*="col"]').hide();
-                        });
+                            $cNew.closest('[class*="col"]').hide();
+                        }
                         // ocultar botones de acción si existen
                         var $btnSave = $(
                             "[id$='cGuardar'], #home_cilindros-cGuardar, [id$='btn_guardar']");
@@ -576,7 +572,7 @@ DEFINE DIALOG oWeb
                         $btnCancel.attr('hidden', 'hidden').css('display', 'none');
                         if (cilindros) try {
                             cilindros.redraw(true);
-                        } catch (e) {}
+                        } catch (e) { }
                         // limpiar snapshot si existiera
                         delete window._cilindrosSnapshot;
                         delete window._cilindrosSelected;

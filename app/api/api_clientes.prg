@@ -23,7 +23,7 @@ static function InitBrowse( oDom )
 	// Abrir conexión y calcular totales primero para proteger contra SP que falla con 0 filas
 	if OpenConnect( oDom, hInfo )
 		if TotalRows( oDom, hInfo )
-			lRes := DoBrowse( hInfo, oDom )
+			lRes := Browse( hInfo, oDom )
 		else
 			lRes := .f.
 		endif
@@ -36,14 +36,13 @@ return lRes
 
 // -------------------------------------------------- //
 
-static function DoBrowse( hInfo, oDom )
+static function Browse( hInfo, oDom )
 
 	local oQry, aClientes := {}, aRow := {}
-	local nPageSize, nPageNumber, nPageCount := 0
+	local nPageSize, nPageNumber := 0
 	local cSearchData, nSearExact := 0
 	local cSortBy := 'Nombre_tercero', cSortDirection := 'A'
 	local cSql := ""
-	local oQryPageCount
 
 	// Abrir base de datos sólo si no existe conexión en hInfo
 	if ! HB_HHasKey( hInfo, 'db' ) .or. hInfo['db'] == NIL
@@ -97,7 +96,7 @@ static function DoBrowse( hInfo, oDom )
 		oDom:Set( 'nav_page', ltrim( str( nPageNumber ) ) )
 
 	else
-		oDom:SetError( "Errror loading data")
+		oDom:SetError( "Error loading data")
 		CloseConnect(oDom, hInfo)
 		return .f.
 	endif
@@ -150,7 +149,7 @@ static function ChangePage( oDom, nDelta )
 	oDom:Set( 'nav_page_total', ltrim( str( hInfo['page_total'] ) ) )
 
 	// Ejecutar búsqueda con el hInfo actualizado
-	lRes := DoBrowse( hInfo, oDom )
+	lRes := Browse( hInfo, oDom )
 
 	// Cerrar conexión
 	CloseConnect( oDom, hInfo )
@@ -190,7 +189,7 @@ static function Nav_Top( oDom )
 	hInfo['page'] := 1
 
 	// Ejecutar búsqueda con hInfo actualizado
-	lRes := DoBrowse( hInfo, oDom )
+	lRes := Browse( hInfo, oDom )
 
 	// Cerrar conexión
 	CloseConnect( oDom, hInfo )
@@ -271,7 +270,7 @@ static function Nav_End( oDom )
 	endif
 
 	// Cargar datos
-	lRes := DoBrowse( hInfo, oDom )
+	lRes := Browse( hInfo, oDom )
 
 	// Cerrar conexión
 	CloseConnect( oDom, hInfo )
@@ -309,7 +308,7 @@ static function Search_clientes( oDom )
 	endif
 
 	// Cargar datos de la primera página
-	lRes := DoBrowse( hInfo, oDom )
+	lRes := Browse( hInfo, oDom )
 
 	// Cerrar conexión
 	CloseConnect( oDom, hInfo )
