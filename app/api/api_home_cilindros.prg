@@ -750,10 +750,3 @@ return nil
 
 // -------------------------------------------------- //
 
-// static function DoNuevo_Movimiento( oDom )
-//     oDom:Set('cOrden', "")
-//     oDom:Set('cFecha', "")
-//     oDom:Set('cCliente', "")
-//     oDom:Set('cInfoCliente', "")
-//     oDom:Set('cilindros_json', "")
-//     oDom:TableSetData('cilindros', {})
