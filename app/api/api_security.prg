@@ -113,21 +113,3 @@ function Logout()
 retu nil 
 
 // -------------------------------------------------- //
-
-function Prueba(oDom)
-
-	local hInfo := InitInfo(oDom)
-	local lConnected := .f.
-
-	// Abrir conexión
-	lConnected := OpenConnect(oDom, hInfo)
-	if !lConnected
-		return nil
-	endif
-
-	hInfo['db']:SqlQuery("UPDATE m_docto_header SET codcli = '8669306' WHERE row_id = 1")
-
-	// Cerrar conexión
-	CloseConnect(oDom, hInfo)
-
-return nil

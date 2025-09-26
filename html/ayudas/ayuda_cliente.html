@@ -18,8 +18,8 @@ aOptions := { ;
 
 // eventos para la tabla
 aEvents := { ;
-	{ 'name' => 'tableBuilt' , 'proc' => 'exe_consulta' }, ;
-	{ 'name' => 'rowClick' , 'proc' => 'seleccionar_cliente' } ;
+	{ 'name' => 'tableBuilt' , 'proc' => 'init_browse' }, ;
+	{ 'name' => 'rowClick' , 'proc' => 'select_cliente' } ;
 }
 
 DEFINE DIALOG oDlg
@@ -35,7 +35,7 @@ DEFINE DIALOG oDlg
                 LABEL 'Filtro de busqueda :' ;
                 PLACEHOLDER 'Ingrese el nombre o código del cliente...' ;
                 BUTTON '<i class="fas fa-search"></i>';
-                ACTION 'filtrar_clientes' ;
+                ACTION 'search_clientes' ;
                 OF o
             ENDDIV o
         ENDROW o

@@ -8,6 +8,13 @@ function InitInfo( oDom )
 	hInfo[ 'page_total' ] 	:= 0
 	hInfo[ 'filtro' ]       := oDom:Get( 'cFiltro', '' )
 
+	// 	hInfo[ 'PageSize' ] 	:= Val( oDom:Get( 'nav_page_rows', '10' ))
+	// hInfo[ 'PageNumber' ] 		:= Val( oDom:Get( 'nav_page', '1' ))
+	// hInfo['SearchData'] 	:= oDom:Get( 'cFiltro', '' )
+	// hInfo['SearchExact'] 	:= 0
+	// hInfo[ 'SortBy' ]      := oDom:Get( 'sort_by', 'Nombre_tercero' )
+	// hInfo[ 'SortDirection' ] := oDom:Get( 'sort_direction', 'A' )
+
 return hInfo
 
 // -------------------------------------------------- //

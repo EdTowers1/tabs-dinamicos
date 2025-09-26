@@ -13,7 +13,9 @@ function api_home_cilindros( oDom )
         case oDom:GetProc() == 'sincronizar'								; DoSincronizar( oDom )
         case oDom:GetProc() == 'filtrar_movimiento'						    ; DoFiltrarMovimiento( oDom )
         case oDom:GetProc() == 'agregar_cilindro'          				    ; DoAgregarCilindro(oDom)
-        case oDom:GetProc() == 'actualizar_movimiento'			    ; DoActualizarMovimiento(oDom)
+        case oDom:GetProc() == 'actualizar_movimiento'			            ; DoActualizarMovimiento(oDom)
+        case oDom:GetProc() == 'obtener_consecutivo'			            ; DoObtenerConsecutivo(oDom)
+
             otherwise 				
             oDom:SetError( "Proc don't defined => " + oDom:GetProc())
     endcase
@@ -253,7 +255,7 @@ return .t.
 // -------------------------------------------------- //
 
 static function Refresh_Nav( oDom, hInfo )
-    oDom:Set    ( 'nav_total'		, hInfo[ 'total' ] )
+    oDom:Set( 'nav_total'		, hInfo[ 'total' ] )
     oDom:Set( 'nav_page'		, ltrim(str(hInfo[ 'page' ])) )
     oDom:Set( 'nav_page_rows'	, ltrim(str(hInfo[ 'page_rows' ])) )
     oDom:Set( 'nav_page_total'	, ltrim(str(hInfo[ 'page_total' ])) )
@@ -536,7 +538,7 @@ static function DoAgregarCilindro(oDom)
     endif
 
     // consultar cilindro
-    oQry := hInfo['db']:Query("SELECT * FROM tbcilindros WHERE cil_codigo = '" + cCodCil + "'")
+    oQry := hInfo['db']:Query("SELECT * FROM m_cilindros WHERE codigo_cilindro = '" + cCodCil + "'")
     if oQry == NIL .or. oQry:reccount() == 0
         oDom:SetAlert("No se encontró el cilindro con código: " + cCodCil, "Error")
         oDom:Set('cNuevoCilindro', "")
@@ -548,18 +550,18 @@ static function DoAgregarCilindro(oDom)
     hFull := oQry:FillHRow()
 
     // Construir el hash del cilindro (ajusta los campos según tus columnas)
-    hCilindro['CODIGO']  := hFull['cil_codigo']
+    hCilindro['CODIGO']  := hFull['codigo_cilindro']
     hCilindro['CANTIDAD']:= 1
-    hCilindro['PRECIO']  := 0  // Ajusta si hay un campo de precio en tbcilindros
+    hCilindro['PRECIO']  := 0  // Ajusta si hay un campo de precio en m_cilindros
 
     // Obtener los cilindros actuales de la tabla desde el campo oculto JSON
     cCilindrosJson := oDom:Get('cilindros_json')
     if !empty(cCilindrosJson)
-        oDom:console("Cilindros JSON: " + cCilindrosJson)
+        //oDom:console("Cilindros JSON: " + cCilindrosJson)
         aCilindros := hb_jsonDecode(cCilindrosJson)
 
     else
-        oDom:console("No hay cilindros actuales, inicializando array vacío.")
+        //oDom:console("No hay cilindros actuales, inicializando array vacío.")
         aCilindros := {}
     endif
 
@@ -700,3 +702,58 @@ static function DoActualizarMovimiento(oDom, hInfo)
     CloseConnect( oDom, hInfo )
 
 return nil
+
+// -------------------------------------------------- //
+
+static function DoObtenerConsecutivo( oDom )
+    
+    local input := {=>}
+    local cInputJson := ""
+    local cOutputJson := ""
+    local oQry := NIL
+    local hOut := {=>}
+    local hInfo := InitInfo(oDom)
+
+    input['codigo_sucursal']  := '01'
+    input['tipo_transaccion'] := 'INC'
+    input['ceros_izquierda']  := 1
+
+    // Abrir conexión
+    if ! OpenConnect( oDom, hInfo )
+        oDom:SetError( 'No se pudo conectar a la base de datos.' )
+        return nil
+    endif
+
+    // Preparar JSON de entrada
+    cInputJson := hb_jsonEncode( input )
+
+    // Asignar variables de sesión, invocar el procedimiento y leer la salida
+    hInfo['db']:SqlQuery( "SET @input = '" + cInputJson + "'" )
+    hInfo['db']:SqlQuery( "SET @output = NULL" )
+    hInfo['db']:SqlQuery( "CALL consecutivo_read(@input,@output)" )
+
+    oQry := hInfo['db']:Query( "SELECT @output AS output" )
+    if oQry != NIL .and. oQry:reccount() > 0
+        cOutputJson := hb_strtoutf8( oQry:output )
+    endif
+
+    if ! empty( cOutputJson )
+        hOut := hb_jsonDecode( cOutputJson )
+        oDom:console( 'cConsecutivo', hOut['documento_generado'] )
+        oDom:console( "Consecutivo JSON: " + cOutputJson )  
+    else
+        oDom:SetError( 'No se recibió respuesta del procedimiento consecutivo_read.' )
+    endif
+
+    CloseConnect( oDom, hInfo )
+return nil
+
+// -------------------------------------------------- //
+
+// static function DoNuevo_Movimiento( oDom )
+//     oDom:Set('cOrden', "")
+//     oDom:Set('cFecha', "")
+//     oDom:Set('cCliente', "")
+//     oDom:Set('cInfoCliente', "")
+//     oDom:Set('cilindros_json', "")
+//     oDom:TableSetData('cilindros', {})

@@ -1,14 +1,13 @@
 function api_clientes( oDom )
 
 	do case
-		case oDom:GetProc() == 'seleccionar_cliente'        ; DoSelecionar_Cliente( oDom )
-		case oDom:GetProc() == 'exe_consulta'       				; DoExeConsulta(oDom)
-		case oDom:GetProc() == 'filtrar_clientes'          	; DoFiltrarClientes(oDom)
-		case oDom:GetProc() == 'nav_refresh'								; DoNav_Refresh( oDom )
-		case oDom:GetProc() == 'nav_top'										; DoNav_Top( oDom )
-		case oDom:GetProc() == 'nav_prev'										; DoNav_Prev( oDom )
-		case oDom:GetProc() == 'nav_next'										; DoNav_Next( oDom )
-		case oDom:GetProc() == 'nav_end'										; DoNav_End( oDom )
+		case oDom:GetProc() == 'init_browse'          	; InitBrowse(oDom)
+		case oDom:GetProc() == 'nav_next'          			; Nav_Next(oDom)
+		case oDom:GetProc() == 'nav_prev'          			; Nav_Prev(oDom)
+		case oDom:GetProc() == 'nav_top'          			; Nav_Top(oDom)
+		case oDom:GetProc() == 'nav_end'          			; Nav_End(oDom)
+		case oDom:GetProc() == 'search_clientes'        ; Search_clientes(oDom)
+		case oDom:GetProc() == 'select_cliente'         ; Select_cliente(oDom)
 			otherwise
 			oDom:SetError( "Proc don't defined => " + oDom:GetProc())
 	endcase
@@ -17,361 +16,311 @@ return oDom:Send()
 
 // -------------------------------------------------- //
 
-static function DoExeConsulta( oDom )
+static function InitBrowse( oDom )
+
 	local hInfo := InitInfo( oDom )
 
-	// Abrir base de datos
-	IF ! OpenConnect(oDom, hInfo)
-		return .f.
-	endif
-
-	// Obtener total de registros
-	if ! TotalRows( oDom, hInfo )
-		CloseConnect( oDom, hInfo )
-	endif
-
-	// Cargar datos de la primera página
-	LoadRows( oDom, hInfo, .T. )  // .T. = inicializar browse
-
-	// Cerrar conexión
-	CloseConnect( oDom, hInfo )
-
-	// Actualizar controles DOM
-	Refresh_Nav( oDom, hInfo )
-
-return .t.
+	// Reutilizar la lógica de consulta y actualización
+return DoBrowse( hInfo, oDom )
 
 // -------------------------------------------------- //
 
-static function DoNav_Next( oDom )
+static function DoBrowse( hInfo, oDom )
 
-	local hInfo	:= InitInfo( oDom )
-
-	//	Open Database
-	if ! OpenConnect( oDom, hInfo )
-		return nil
-	endif
-
-	//	Refresh Total rows
-	if ! TotalRows( oDom, hInfo )
-		return nil
-	endif
-
-	//	Update page
-	hInfo[ 'page' ]++
-
-	if hInfo[ 'page' ] > hInfo[ 'page_total' ]
-		hInfo[ 'page' ] := hInfo[ 'page_total' ]
-	endif
-
-	//	Load data...
-	LoadRows( oDom, hInfo )
-
-	//	Close database connection
-	CloseConnect( oDom, hInfo )
-
-	//	Refresh Dom
-	Refresh_Nav( oDom, hInfo )
-
-return nil
-
-// -------------------------------------------------- //
-
-static function TotalRows( oDom, hInfo )
-	local oQry, nTotal := 0
-	local cSql, cWhere := ""
-
-	hInfo[ 'total' ] := 0
-
-	// Construir cláusula WHERE para filtro general
-	if !empty(hInfo['filtro'])
-		cWhere := "(UPPER(codcli) LIKE '%" + Upper(hInfo['filtro']) + "%' OR UPPER(Nombre_tercero) LIKE '%" + Upper(hInfo['filtro']) + "%')"
-	endif
-
-	// Construir SQL con filtros
-	cSql := "SELECT COUNT(*) as total FROM m_terceros"
-	if !empty(cWhere)
-		cSql += " WHERE " + cWhere
-	endif
-
-	// Consulta para obtener el total de registros
-	oQry := hInfo[ 'db' ]:Query( cSql )
-
-	IF oQry != NIL
-		nTotal := oQry:total
-		hInfo[ 'total' ] := nTotal
-	ELSE
-		oDom:SetError( 'Error counting records' )
-		return .f.
-	ENDIF
-
-	// Calcular total de páginas
-	hInfo[ 'page_total' ] := Int( hInfo[ 'total' ] / hInfo[ 'page_rows' ] ) + ;
-		if( hInfo[ 'total' ] % hInfo[ 'page_rows' ] == 0, 0, 1 )
-
-	// Validar página actual
-	if hInfo[ 'page' ] > hInfo[ 'page_total' ] .or. hInfo[ 'page' ] <= 0
-		hInfo[ 'page' ] := 1
-	endif
-
-return .t.
-
-// -------------------------------------------------- //
-
-static function LoadRows( oDom, hInfo, lInitBrw )
 	local oQry, aClientes := {}, aRow := {}
-	local cSql, cWhere := "", nRowInit
+	local nPageSize, nPageNumber, nPageCount := 0
+	local cSearchData, nSearExact := 0
+	local cSortBy := 'Nombre_tercero', cSortDirection := 'A'
+	local cSql := ""
+	local oQryPageCount
 
-	hb_default( @lInitBrw, .f. )
-
-	if !empty(hInfo['filtro'])
-		cWhere := "(UPPER(codcli) LIKE '%" + Upper(hInfo['filtro']) + "%' OR UPPER(Nombre_tercero) LIKE '%" + Upper(hInfo['filtro']) + "%')"
+	// Abrir base de datos sólo si no existe conexión en hInfo
+	if ! HB_HHasKey( hInfo, 'db' ) .or. hInfo['db'] == NIL
+		IF ! OpenConnect(oDom, hInfo)
+			return .f.
+		endif
 	endif
 
-	// Calcular OFFSET para la paginación
-	nRowInit := ( hInfo[ 'page' ] - 1 ) * hInfo[ 'page_rows']
+	// Asignar valores a las variables
+	nPageSize := hInfo['page_rows']        // 10 por defecto
+	nPageNumber := hInfo['page']           // 1 por defecto
+	cSearchData := hInfo['filtro']         // filtro de búsqueda
 
-	// Construir SQL con LIMIT, OFFSET y WHERE para filtros
-	cSql := "SELECT row_id, codcli, Nombre_tercero FROM m_terceros" 
+	cSql := "CALL usp_terceros_lista(" + ;
+		ltrim(str(nPageSize)) + ", " + ;
+		ltrim(str(nPageNumber)) + ", '" + cSearchData + "', " + ;
+		ltrim(str(nSearExact)) + ", '" + cSortBy + "', '" + cSortDirection + "', @PageCount)"
 
-	if !empty(cWhere)
-		cSql += " WHERE " + cWhere
-	endif
-	
-	cSql += " ORDER BY CASE " + ;
-		"WHEN Nombre_tercero IS NULL OR Nombre_tercero = '' THEN 4 " + ; // Vacíos
-		"WHEN LEFT(LTRIM(Nombre_tercero), 1) BETWEEN 'A' AND 'Z' THEN 1 " + ; // Letras mayúsculas
-		"WHEN LEFT(LTRIM(Nombre_tercero), 1) BETWEEN '0' AND '9' THEN 2 " + ; // Números
-		"ELSE 3 END, Nombre_tercero"
-	
-	cSql += " LIMIT " + ltrim(str(hInfo[ 'page_rows' ])) + " OFFSET " + ltrim(str(nRowInit))
+	oQry := hInfo['db']:Query( cSql )
 
-	oQry := hInfo[ 'db' ]:Query( cSql )
-
-	IF oQry != NIL
-		oQry:gotop()
+	if oQry != NIL
+		oQry:GoTop()
 		DO WHILE ! oQry:Eof()
 			aRow := { 'ROW_ID' => oQry:row_id, 'CODCLI' => oQry:codcli, 'NOMCLI' => hb_strtoutf8(oQry:Nombre_tercero) }
 			AADD( aClientes, aRow )
 			oQry:Skip()
 		END
-	ELSE
-		oDom:SetError( 'Error loading data' )
-		return .f.
-	ENDIF
 
-	// Actualizar tabla
-	oDom:TableSetData( 'clientes', aClientes )
+		// Actualizar la tabla con los datos obtenidos
+		oDom:TableSetData('clientes', aClientes)
+
+		// Devolver al cliente el estado de paginación (útil para la UI)
+		oDom:Set( 'nav_page', ltrim( str( nPageNumber ) ) )
+
+	else
+		oDom:SetError( "Errror loading data")
+		CloseConnect(oDom, hInfo)
+		return .f.
+	endif
+
+	// Cerrar la conexión
+	CloseConnect(oDom, hInfo)
 
 return .t.
 
 // -------------------------------------------------- //
 
-static function Refresh_Nav( oDom, hInfo )
-	oDom:Set( 'nav_total'		, hInfo[ 'total' ] )
-	oDom:Set( 'nav_page'		, ltrim(str(hInfo[ 'page' ])) )
-	oDom:Set( 'nav_page_rows'	, ltrim(str(hInfo[ 'page_rows' ])) )
-	oDom:Set( 'nav_page_total'	, ltrim(str(hInfo[ 'page_total' ])) )
-return nil
+static function ChangePage( oDom, nDelta )
 
-// -------------------------------------------------- //
+	local hInfo, nPage, lRes
 
-static function DoNav_Top( oDom )
-	local hInfo	:= InitInfo( oDom )
+	hInfo := InitInfo( oDom )
 
-	// Abrir base de datos
+	// Abrir conexión para poder calcular totales
 	if ! OpenConnect( oDom, hInfo )
-		return nil
+		return .f.
 	endif
 
-	// Obtener total de registros
+	// Obtener total de filas/páginas
 	if ! TotalRows( oDom, hInfo )
-		return nil
+		CloseConnect( oDom, hInfo )
+		return .f.
 	endif
 
-	// Ir a primera página
-	hInfo[ 'page' ] := 1
+	// Conversión segura del valor de página
+	if valtype( hInfo['page'] ) == 'N' .or. valtype( hInfo['page'] ) == 'I'
+		nPage := hInfo['page']
+	else
+		nPage := Val( hInfo['page'] )
+	endif
 
-	// Cargar datos
-	LoadRows( oDom, hInfo )
+	// Aplicar delta
+	nPage := nPage + nDelta
+
+	// Limitar entre 1 y page_total
+	if nPage < 1
+		nPage := 1
+	endif
+	if HB_HHasKey( hInfo, 'page_total' ) .and. nPage > hInfo['page_total']
+		nPage := hInfo['page_total']
+	endif
+
+	// Actualizar en memoria y en la respuesta (útil para la UI)
+	hInfo['page'] := nPage
+	oDom:Set( 'nav_page', ltrim( str( nPage ) ) )
+	oDom:Set( 'nav_page_total', ltrim( str( hInfo['page_total'] ) ) )
+
+	// Ejecutar búsqueda con el hInfo actualizado
+	lRes := DoBrowse( hInfo, oDom )
 
 	// Cerrar conexión
 	CloseConnect( oDom, hInfo )
 
-	// Actualizar controles DOM
-	Refresh_Nav( oDom, hInfo )
-
-return nil
+return lRes
 
 // -------------------------------------------------- //
 
-static function DoNav_End( oDom )
-	local hInfo	:= InitInfo( oDom )
+static function Nav_Next( oDom )
+
+return ChangePage( oDom, 1 )
+
+// -------------------------------------------------- //
+
+static function Nav_Prev( oDom )
+
+return ChangePage( oDom, -1 )
+
+// -------------------------------------------------- //
+
+static function Nav_Top( oDom )
+
+	local hInfo := InitInfo( oDom )
+
+	hInfo['page'] := 1
+
+	// Informar al cliente
+	oDom:Set( 'nav_page', '1' )
+
+return DoBrowse( hInfo, oDom )
+
+// -------------------------------------------------- //
+
+static function TotalRows( oDom, hInfo )
+
+	local oQry, nTotal := 0
+	local cSql := ""
+
+	hInfo['total'] := 0
+
+
+	cSql := "SELECT COUNT(*) as total FROM m_terceros"
+
+	// Aplicar filtro simple si existe
+	if !empty( hInfo['filtro'] )
+		cSql += " WHERE UPPER(nombre_tercero) LIKE '%" + Upper( hInfo['filtro'] ) + "%'"
+	endif
+
+	oQry := hInfo['db']:Query( cSql )
+
+	if oQry != NIL
+		nTotal := oQry:total
+		hInfo['total'] := nTotal
+	else
+		oDom:SetError( 'Error counting records' )
+		return .f.
+	endif
+
+	// Calcular total de páginas
+	hInfo['page_total'] := Int( hInfo['total'] / hInfo['page_rows'] ) + ;
+		if( hInfo['total'] % hInfo['page_rows'] == 0, 0, 1 )
+
+	// Validar página actual
+	if hInfo['page'] > hInfo['page_total'] .or. hInfo['page'] <= 0
+		hInfo['page'] := 1
+	endif
+
+return .t.
+
+// -------------------------------------------------- //
+
+static function Nav_End( oDom )
+
+	local hInfo, lRes
+
+	hInfo := InitInfo( oDom )
 
 	// Abrir base de datos
 	if ! OpenConnect( oDom, hInfo )
-		return nil
+		return .f.
 	endif
 
-	// Obtener total de registros
+	// Obtener total de registros y páginas
 	if ! TotalRows( oDom, hInfo )
-		return nil
+		CloseConnect( oDom, hInfo )
+		return .f.
 	endif
 
 	// Ir a última página
-	hInfo[ 'page' ] := hInfo[ 'page_total' ]
+	hInfo['page'] := hInfo['page_total']
 
 	// Cargar datos
-	LoadRows( oDom, hInfo )
+	lRes := DoBrowse( hInfo, oDom )
 
 	// Cerrar conexión
 	CloseConnect( oDom, hInfo )
 
-	// Actualizar controles DOM
-	Refresh_Nav( oDom, hInfo )
+	// Enviar info de paginación al cliente
+	oDom:Set( 'nav_page', ltrim( str( hInfo['page'] ) ) )
+	oDom:Set( 'nav_page_total', ltrim( str( hInfo['page_total'] ) ) )
 
-return nil
+return lRes
 
 // -------------------------------------------------- //
 
-static function DoNav_Prev( oDom )
-	local hInfo	:= InitInfo( oDom )
+static function Search_clientes( oDom )
 
-	// Abrir base de datos
+	local hInfo, cFilter, lRes
+
+	hInfo := InitInfo( oDom )
+
+	// Obtener filtro enviado desde el DOM (si viene en la petición)
+	cFilter := oDom:Get( 'cFiltro', hInfo['filtro'] )
+	hInfo['filtro'] := cFilter
+
+	// Ir a la primera página al buscar
+	hInfo['page'] := 1
+
+	// Abrir conexión
 	if ! OpenConnect( oDom, hInfo )
-		return nil
+		return .f.
 	endif
 
-	// Obtener total de registros
+	// Calcular totales para la paginación
 	if ! TotalRows( oDom, hInfo )
-		return nil
+		CloseConnect( oDom, hInfo )
+		return .f.
 	endif
 
-	// Ir a página anterior
-	hInfo[ 'page' ]--
-
-	if hInfo[ 'page' ] <= 0
-		hInfo[ 'page' ] := 1
-	endif
-
-	// Cargar datos
-	LoadRows( oDom, hInfo )
+	// Cargar datos de la primera página
+	lRes := DoBrowse( hInfo, oDom )
 
 	// Cerrar conexión
 	CloseConnect( oDom, hInfo )
 
-	// Actualizar controles DOM
-	Refresh_Nav( oDom, hInfo )
+	// Actualizar controles de paginación en el cliente
+	oDom:Set( 'nav_total', hInfo['total'] )
+	oDom:Set( 'nav_page', ltrim( str( hInfo['page'] ) ) )
+	oDom:Set( 'nav_page_rows', ltrim( str( hInfo['page_rows'] ) ) )
+	oDom:Set( 'nav_page_total', ltrim( str( hInfo['page_total'] ) ) )
 
-return nil
-
-// -------------------------------------------------- //
-
-static function DoNav_Refresh( oDom, hInfo )
-
-	// Inicializar información si no se proporciona
-	if hInfo == NIL
-		hInfo := InitInfo( oDom )
-	endif
-
-	// Abrir base de datos
-	if ! OpenConnect( oDom, hInfo )
-		return nil
-	endif
-
-	// Obtener total de registros
-	if ! TotalRows( oDom, hInfo )
-		return nil
-	endif
-
-	// Cargar datos
-	LoadRows( oDom, hInfo )
-
-	// Actualizar controles DOM
-	Refresh_Nav( oDom, hInfo )
-
-	// Cerrar conexión
-	CloseConnect( oDom, hInfo )
-
-return nil
+return lRes
 
 // -------------------------------------------------- //
 
-static function DoSelecionar_Cliente (oDom)
-
+static function Select_cliente( oDom )
 	local hBrowse := oDom:Get( 'clientes' )
-	local aSelected := hBrowse[ 'selected' ]
-	local nRowId, hInfo, oQry, hFull, cInfoCliente := ""
-	
-	if len(aSelected) > 0
-		nRowId := aSelected[1]['ROW_ID']
-		
-		hInfo := InitInfo( oDom )
-		if ! OpenConnect( oDom, hInfo )
-			return nil
+	local aSelected := {}
+	local nRowId := 0
+	local hRow := {}
+	local cCodcli := ""
+	local cNombre := ""
+	local hInfo, oQry, hFull, cInfoCliente := NIL
+
+	// Obtener selección
+	if valtype( hBrowse ) == 'H' .and. HB_HHasKey( hBrowse, 'selected' )
+		aSelected := hBrowse['selected']
+	endif
+
+	if valtype( aSelected ) == 'A' .and. len( aSelected ) > 0
+		hRow := aSelected[1]
+		nRowId := hRow['ROW_ID']
+
+		// Intentar usar los datos ya presentes en la selección (evita consulta)
+		if HB_HHasKey( hRow, 'CODCLI' )
+			cCodcli := hRow['CODCLI']
+		endif
+		if HB_HHasKey( hRow, 'NOMCLI' )
+			cNombre := hRow['NOMCLI']
 		endif
 
-		oQry := hInfo['db']:Query( "SELECT * FROM m_terceros WHERE row_id = " + ltrim(str(nRowId)) + " LIMIT 1" )
+		// // Si no tenemos código o nombre, hacer la consulta como fallback
+		// if empty( cCodcli ) .or. empty( cNombre )
+		// 	hInfo := InitInfo( oDom )
+		// 	if ! OpenConnect( oDom, hInfo )
+		// 		return nil
+		// 	endif
 
-		if oQry != NIL .and. !oQry:eof()
-			hFull := oQry:FillHRow()
-					
-			cInfoCliente := "Código: " + hFull['codcli'] + CHR(13) + CHR(10) + ;
-				"Nombre: " + hb_strtoutf8(hFull['nombre_tercero']) + CHR(13) + CHR(10)
+		// 	oQry := hInfo['db']:Query( "SELECT * FROM m_terceros WHERE row_id = " + ltrim( str( nRowId ) ) + " LIMIT 1" )
+		// 	if oQry != NIL .and. !oQry:Eof()
+		// 		hFull := oQry:FillHRow()
+		// 		cCodcli := hFull['codcli']
+		// 		cNombre := hb_strtoutf8( hFull['nombre_tercero'] )
+		// 	endif
+
+		// 	CloseConnect( oDom, hInfo )
+		// endif
+
+		// Si ya tenemos código y/o nombre, llenar diálogo
+		if !empty( cCodcli )
+			cInfoCliente := "Código: " + cCodcli + CHR(13) + CHR(10) + ;
+				"Nombre: " + cNombre + CHR(13) + CHR(10)
+
 			oDom:SetDlg( 'home_cilindros' )
-			oDom:Set( 'cCliente', hFull['codcli'] )
+			oDom:Set( 'cCliente', cCodcli )
 			oDom:Set( 'cInfoCliente', cInfoCliente )
-			oDom:DialogClose('ayuda_cliente')
+			oDom:DialogClose( 'ayuda_cliente' )
 		endif
-		
-		CloseConnect( oDom, hInfo )
 	endif
+
 return nil
-
-// -------------------------------------------------- //
-
-static function DoFiltrarClientes( oDom )
-
-	local cFiltro := ""
-	local hInfo := InitInfo( oDom )
-    
-	// Obtener el valor del filtro desde el DOM
-	cFiltro := AllTrim(oDom:Get("cFiltro"))
-    
-	// Abrir conexión a la base de datos
-	if ! OpenConnect( oDom, hInfo )
-		return oDom:Send()
-	endif
-    
-	// Agregar filtro a la información
-	if !Empty(cFiltro)
-		hInfo[ 'filtro' ] := cFiltro
-	else
-		hInfo[ 'filtro' ] := ""
-	endif
-    
-	// Resetear página a 1 cuando se aplica filtro
-	hInfo[ 'page' ] := 1
-    
-	// Obtener total de registros con el filtro
-	if ! TotalRows( oDom, hInfo )
-		CloseConnect( oDom, hInfo )
-		return oDom:Send()
-	endif
-    
-	// Cargar datos filtrados
-	if ! LoadRows( oDom, hInfo, .T. )
-		CloseConnect( oDom, hInfo )
-		return oDom:Send()
-	endif
-    
-	// Cerrar conexión
-	CloseConnect( oDom, hInfo )
-    
-	// Actualizar controles de navegación
-	Refresh_Nav( oDom, hInfo )
-
-return oDom:Send()
-
-// -------------------------------------------------- //
 
